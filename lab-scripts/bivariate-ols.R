@@ -1,5 +1,5 @@
 #' ---
-#' title: "Bivariate OLS"
+#' title: "The Bivariate Linear Model"
 #' layout: lab
 #' permalink: /lab-scripts/lab-3/
 #' active: lab-scripts

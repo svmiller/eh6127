@@ -19,6 +19,12 @@
       subhref: "/lab-scripts/lab-1/"
     - subtitle: "Some Basics of Descriptive Inference"
       subhref: "/lab-scripts/lab-2/"
+    - subtitle: "The Bivariate Linear Model"
+      subhref: "/lab-scripts/lab-3/"
+    - subtitle: "Extending the Linear Model"
+      subhref: "/lab-scripts/lab-4/"
+    - subtitle: "Linear Model Diagnostics (and What to Do if You Flunk One)"
+      subhref: "/lab-scripts/lab-5/"
   
 - title: "Problem Sets"
   href: "/problem-sets/"

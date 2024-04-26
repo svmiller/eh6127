@@ -1,24 +1,27 @@
 #' ---
-#' title: "OLS Diagnostics (and What to Do if You Flunk One)"
-#' author: Steven V. Miller, [svmiller.com](http://svmiller.com)
-#' date: 27 December 2022
+#' title: "Linear Model Diagnostics (and What to Do if You Flunk One)"
+#' layout: lab
+#' permalink: /lab-scripts/lab-5/
+#' active: lab-scripts
 #' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
 #' methods class that I teach at Stockholm University. It will not be the most sophisticated 
 #' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
 #' for discussion around the associated R script for the week's 'lab' session."
 #' output:
-#'    html_document:
-#'      css: lab-script.css
-#'      toc: TRUE
-#'      toc_float:
-#'        collapsed: false
-#'        smooth_scroll: false
-#'      highlight: zenburn
+#'    md_document:
+#'      variant: gfm
+#'      preserve_yaml: TRUE
 #' ---
-#' 
-#' 
-#' 
-#' # R Packages/Data for This Session
+
+#+ setup, include=FALSE
+knitr::opts_chunk$set(collapse = TRUE, 
+                      fig.path = "figs/lab-5/",
+                      cache.path = "cache/lab-5/",
+                      fig.width = 11,
+                      comment = "#>")
+#+
+
+#' ## R Packages/Data for This Session
 #' 
 #' You should've already installed the R packages for this lab session. `{tidyverse}` will be 
 #' for all things workflow and that's all we'll be using today. `{stevedata}` will have 
@@ -41,7 +44,7 @@ library(modelr) # for bootstrapping, also optional.
 
 theme_set(theme_steve()) # optional, but I want it...
 
-#' # The Data We'll Be Using
+#' ## The Data We'll Be Using
 #' 
 #' I'll be using the `ESS9GB` data set in `{stevedata}`. You can find more information
 #' about this data set by typing this into your Rstudio console.
@@ -87,7 +90,7 @@ summary(M1)
 
 #' Now, let's do some diagnostic testing.
 #' 
-#' # Linearity
+#' ## Linearity
 #' 
 #' OLS assumes some outcome *y* is a linear function of some right-hand predictors
 #' you include in the model. That is, the estimated value itself follows that
@@ -203,7 +206,7 @@ summary(M2)
 #' model have to be justified by you, the one doing the higher-order polynomials. 
 #' Always be prepared to explain anything you're doing.
 #' 
-#' # Independence 
+#' ## Independence 
 #' 
 #' The OLS model assumes the independence of the model's errors and that any pair
 #' of errors are going to be uncorrelated with each other. Past observations 
@@ -269,7 +272,7 @@ summary(M3)
 #' nature of the problem, which will definitely depend on you knowing your data 
 #' well and what you're trying to accomplish.
 #' 
-#' # Normality (of the Errors)
+#' ## Normality (of the Errors)
 #' 
 #' OLS assumes the *errors* are normally distributed. This is often conflated with
 #' an assumption  that the outcome variable is normally distributed. That's not 
@@ -403,7 +406,7 @@ rd_plot(M1)
 #' "solution" often point to what exactly your dependent variable looks like 
 #' and whether OLS is the right model for the job.
 #' 
-#' # Equal Error Variance (Homoskedasticity)
+#' ## Equal Error Variance (Homoskedasticity)
 #' 
 #' The final diagnostic test you should run on the OLS model involves assessing
 #' whether the distribution of residuals is constant across the range of the

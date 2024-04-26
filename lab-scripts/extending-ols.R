@@ -1,20 +1,25 @@
 #' ---
-#' title: "Extending OLS"
-#' author: Steven V. Miller, [svmiller.com](http://svmiller.com)
-#' date: 18 December 2022
+#' title: "Extending the Linear Model"
+#' layout: lab
+#' permalink: /lab-scripts/lab-4/
+#' active: lab-scripts
 #' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
 #' methods class that I teach at Stockholm University. It will not be the most sophisticated 
 #' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
 #' for discussion around the associated R script for the week's 'lab' session."
 #' output:
-#'    html_document:
-#'      css: lab-script.css
-#'      toc: TRUE
-#'      toc_float:
-#'        collapsed: false
-#'        smooth_scroll: false
-#'      highlight: zenburn
+#'    md_document:
+#'      variant: gfm
+#'      preserve_yaml: TRUE
 #' ---
+
+#+ setup, include=FALSE
+knitr::opts_chunk$set(collapse = TRUE, 
+                      fig.path = "figs/lab-4/",
+                      cache.path = "cache/lab-4/",
+                      fig.width = 11,
+                      comment = "#>")
+#+
 
 
 #' # R Packages/Data for This Session
@@ -33,7 +38,7 @@ library(stevedata)
 # library(forcats)
 # library(ggplot2)
 
-#' # Building Toward Multiple Regression
+#' ## Building Toward Multiple Regression
 #' 
 #' Last time we had a lab, we just focused on bivariate linear model with fake 
 #' data that we created. The goal of that exercise was to show you what the
@@ -221,7 +226,7 @@ summary(M4)
 #' regressors? Then don't bother with the details, because it's mostly immaterial
 #' to what you want to accomplish.
 #' 
-#' # Multiple Regression
+#' ## Multiple Regression
 #' 
 #' Now, let's a do a multiple regression. Let's see if we can't regress the
 #' immigration sentiment variable on the Scotland dummy variable, whether the
@@ -261,7 +266,7 @@ summary(M5)
 #'   incidentally the most precise in the model. There is a clear ideology effect
 #'   in our model.
 #'   
-#' # Interactive Effects
+#' ## Interactive Effects
 #' 
 #' Let's walk through the issue of what to do when you think there might be an 
 #' interactive relationship among *x* and *z* in their relationship with *y*. 
