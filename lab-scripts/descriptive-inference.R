@@ -1,23 +1,28 @@
 #' ---
 #' title: "Some Basics of Descriptive Inference"
-#' author: Steven V. Miller, [svmiller.com](http://svmiller.com)
-#' date: 5 December 2022
+#' layout: lab
+#' permalink: /lab-scripts/lab-2/
+#' active: lab-scripts
 #' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
 #' methods class that I teach at Stockholm University. It will not be the most sophisticated 
 #' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
 #' for discussion around the associated R script for the week's 'lab' session."
 #' output:
-#'    html_document:
-#'      css: lab-script.css
-#'      toc: TRUE
-#'      toc_float:
-#'        collapsed: false
-#'        smooth_scroll: false
-#'      highlight: zenburn
+#'    md_document:
+#'      variant: gfm
+#'      preserve_yaml: TRUE
 #' ---
 
+#+ setup, include=FALSE
+knitr::opts_chunk$set(collapse = TRUE, 
+                      fig.path = "figs/lab-2/",
+                      cache.path = "cache/lab-2/",
+                      fig.width = 11,
+                      comment = "#>")
+#+
 
-#' # R Packages/Data for This Session
+
+#' ## R Packages/Data for This Session
 #' 
 #' You should've already installed the R packages for this lab session. `{tidyverse}` will be 
 #' for all things workflow and `{stevedata}` will be for the toy data sets.
@@ -72,7 +77,7 @@ library(tidyverse)
 #' the social sciences, even as we don't necessarily like to acknowledge them as such 
 #' (because they are information-poor). 
 #' 
-#' ## Getting Modes for Unordered-Categorical Variables
+#' ### Getting Modes for Unordered-Categorical Variables
 #' 
 #' For example, the `race` variable in the `gss_spending` is unordered-categorical. We 
 #' can see from the documentation that 1 = white, 2 = black, and 3 = other. However,
@@ -135,7 +140,7 @@ gss_spending %>%
         title = "A Bar Chart of Respondent Race in the General Social Survey (2018)")
 
 
-#' ## Getting Medians for Ordered-Categorical Variables
+#' ### Getting Medians for Ordered-Categorical Variables
 #' 
 #' The second kind of discrete variable is called "ordered-categorical." These are 
 #' variables where increasing (or decreasing) values communicate "more" (or "less") 
@@ -188,7 +193,7 @@ gss_spending %>%
          cumperc = cumsum(prop)*100) %>%
   select(degree, degree_lab, everything())
 
-#' # Identifying the Mean (and Standard Deviation)
+#' ## Identifying the Mean (and Standard Deviation)
 #' 
 #' Means are what would want in most applications, provided your 
 #' data are interval and could be plausibly described by the mean. 
@@ -274,7 +279,7 @@ pwt_sample %>%
   summarize(Median = median(rgdpb, na.rm=T),
             Mean = mean(rgdpb, na.rm=T),
             .by = year) %>%
-  gather(Category, value, Median:Mean, -year) #%>% # arrange(year)
+  gather(Category, value, Median:Mean, -year) %>%
   ggplot(.,aes(year,value, color=Category, linetype=Category)) +
   geom_line(linewidth=1.1) +
   scale_x_continuous(breaks = seq(1950, 2020, by =5)) +
@@ -285,7 +290,7 @@ pwt_sample %>%
        title = "Median and Mean Real GDP for 22 Rich Countries, 1950-2019",
        subtitle = "A mean that further separates from the mean suggests a worsening skew problem.")
 
-#' # An Aside: On "Dummy" Variables
+#' ## An Aside: On "Dummy" Variables
 #' 
 #' I want to dedicate a special comment here to what are commonly called "dummy" variables. 
 #' "Dummy" variables (aka binary variables) are variables that take on just two values---functionally
@@ -315,7 +320,7 @@ gss_spending %>%
 #' the middlemost observation is a woman on this dummy variable (the median), and
 #' that about 55.2% of the observations are women (the mean).
 #' 
-#' # An Aside: Ordinal or Interval? Or Something Else?
+#' ## An Aside: Ordinal or Interval? Or Something Else?
 #' 
 #' Practitioners love to treat technically ordinal data as interval. 
 #' There's more you can do with an interval-level variable than you can with 

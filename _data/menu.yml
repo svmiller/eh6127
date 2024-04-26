@@ -1,14 +1,28 @@
-- title: "About"
-  href: "/about/"
+# - title: "Syllabus"
+#   href: ""
+#   icons: "fa fa-list-ul fa-lg"
 
-- title: "Blog"
-  href: "/blog/"
+- title: "Course Info"
+  href: "/course-materials/"
+  icons: "fas fa-list-ul fa-lg"
 
-- title: "CV"
-  href: "/cv/"
 
-- title: "Miscellany"
-  href: "/miscellany/"
+- title: "Lectures"
+  href: "/lectures/"
+  icons: "fas fa-chalkboard-teacher"
+  
+- title: "Lab Scripts"
+  href: "/lab-scripts/"
+  icons: "fas fa-flask"
+  subcategories:
+    - subtitle: "An Intro to R, Rstudio, and {tidyverse}"
+      subhref: "/lab-scripts/lab-1/"
+    - subtitle: "Some Basics of Descriptive Inference"
+      subhref: "/lab-scripts/lab-2/"
+  
+- title: "Problem Sets"
+  href: "/problem-sets/"
+  icons: "fas fa-laptop-code"
   subcategories:
     - subtitle: "Item 1"
       subhref: "/miscellany/item-1/"

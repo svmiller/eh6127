@@ -1,31 +1,48 @@
 #' ---
-#' title: "An Intro to R, Rstudio, and `{tidyverse}`"
-#' author: Steven V. Miller, [svmiller.com](http://svmiller.com)
-#' date: 23 Nov. 2022
-#' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
-#' methods class that I teach at Stockholm University. It will not be the most sophisticated 
-#' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
-#' for discussion around the associated R script for the week's 'lab' session."
+#' title: "An Intro to R, Rstudio, and {tidyverse}"
+#' layout: lab
+#' permalink: /lab-scripts/lab-1/
+#' active: lab-scripts
+#' abstract: "This lab scripts offers what I think to be a gentle introduction
+#' to R and RStudio. It will try to acclimate students with R as programming 
+#' language and RStudio as IDE for the R programming language. There will be
+#' a few recurring themes here that are subtle but deceptively critical. 1) You
+#' really must know where you are on your computer without referencing to icons
+#' you can push (i.e. know your working directory and the path to it). 2) You 
+#' can push any number of buttons in RStudio, but everything is still a command
+#' in a terminal/console. Pay careful attention to that information as it's
+#' communicated to you."
 #' output:
-#'    html_document:
-#'      css: lab-script.css
-#'      toc: TRUE
-#'      toc_float:
-#'        collapsed: false
-#'        smooth_scroll: false
-#'      highlight: zenburn
+#'    md_document:
+#'      variant: gfm
+#'      preserve_yaml: TRUE
 #' ---
 
-#' # Elsewhere in the R `"Steveverse"`
+#+ setup, include=FALSE
+knitr::opts_chunk$set(collapse = TRUE, 
+                      fig.path = "figs/lab-1/",
+                      cache.path = "cache/lab-1/",
+                      fig.width = 11,
+                      comment = "#>")
+#+
+
+#' ## Elsewhere in My R Cinematic Universe
 #' 
-#' Some of what I offer here may be (aggressively) plagiarized from other resources I've made available.
-#' In particular, check out [this near identical guide](http://post8000.svmiller.com/lab-scripts/intro-r-rstudio.html) 
-#' I made available for graduate students at my previous employer. I have 
-#' [a somewhat dated guide](http://svmiller.com/blog/2014/08/a-beginners-guide-to-using-r/) on my website too.
+#' Some of what I offer here will have to be aggressively plagiarized from
+#' other resources I've made available. I started teaching graduate-level 
+#' methods at my previous employer and the bulk of 
+#' [what I wrote there](http://post8000.svmiller.com/lab-scripts/intro-r-rstudio.html) 
+#' will be ported over here. Likewise, I give basically 
+#' [the same tutorial](http://ir3-2.svmiller.com/lab-scripts/lab-1/) to our
+#' third-semester BA students. There is a much, much older guide that I wrote
+#' [back in 2014](http://svmiller.com/blog/2014/08/a-beginners-guide-to-using-r/)
+#' that you may or may not find super useful. I don't know what else to say here.
+#' When it comes to introducing students to R, you're going to repeat yourself
+#' on loop.
 #' 
 #' 
 #' 
-#' # Configure Rstudio
+#' ## Configure Rstudio
 #' 
 #' When you're opening R for the very first time, it'll be useful to just get a general sense of what's happening.
 #' I have [a beginner's guide that I wrote in 2014](http://svmiller.com/blog/2014/08/a-beginners-guide-to-using-r/) 
@@ -33,27 +50,31 @@
 #' which you should download as well. Rstudio desktop is free. 
 #' Don't pay for a "pro" version.  You're not running a server. You won't need it. 
 #' 
-#' When you download and install Rstudio *on top* of R, you should customize it just a tiny bit to 
-#' make the most of the graphical user interface. To do what I recommend doing, select "Tools" in the menu. 
-#' Scroll to "global options" (which should be at the bottom). On the pop-up, select "pane layout." Rearrange it so that "Source" is top left, "Console"
-#' is top right, and the files/plots/packages/etc. is the bottom right. Thereafter: apply the changes.
+#' When you download and install Rstudio *on top* of R, you should customize it 
+#' just a tiny bit to make the most of the graphical user interface. To do what 
+#' I recommend doing, select "Tools" in the menu. Scroll to "global options" 
+#' (which should be at the bottom). On the pop-up, select "pane layout." 
+#' Rearrange it so that "Source" is top left, "Console" is top right, and the 
+#' files/plots/packages/etc. is the bottom right. Thereafter: apply the changes.
 #' 
 #' ![](http://post8000.svmiller.com/intro-r-rstudio/rstudio-global-options.png)
 #' 
-#' You don't have to do this, but I think you should since it better economizes space in Rstudio. The other pane 
-#' (environment/history, Git, etc.) is stuff you can either learn to not need (e.g. what's in the environment) 
-#' or will only situationally need at an advanced level (e.g. Git information). Minimize 
-#' that outright. When you're in Rstudio, much of what you'll be doing leans on the script 
-#' window and the console window. You'll occasionally be using the file browser and plot panes as well.
+#' You don't have to do this, but I think you should since it better economizes 
+#' space in RStudio. The other pane (environment/history, Git, etc.) is stuff 
+#' you can either learn to not need (e.g. what's in the environment) or will 
+#' only situationally need at an advanced level (e.g. Git information). Minimize 
+#' that outright. When you're in Rstudio, much of what you'll be doing leans on 
+#' the script window and the console window. You'll occasionally be using the 
+#' file browser and plot panes as well.
 #' 
 #' If you have not done so already, open a new script (Ctrl-Shift-N in Windows/Linux or Cmd-Shift-N in Mac) 
 #' to open a new script.
 #' 
-#' # Get Acclimated in R
+#' ## Get Acclimated in R
 #' 
 #' Now that you've done that, let's get a general sense of where you are in an R session. 
 #' 
-#' ## Current Working Directory
+#' ### Current Working Directory
 #' 
 #' First, let's start with identifying the current working directory. You should know where 
 #' you are and this happens to be where I am, given the location of this script.
@@ -68,7 +89,7 @@ getwd()
 #' R, like everything else in the world, uses forward slashes. The backslashes owe to 
 #' Windows' derivation from DOS.
 #' 
-#' ## Create "Objects"
+#' ### Create "Objects"
 #' 
 #' Next, let's create some "objects." R is primarily an "object-oriented" programming language. 
 #' In as many words, inputs create outputs that may be assigned to objects in the workspace. 
@@ -87,27 +108,29 @@ A + b
 
 # what objects did we create?
 # Notice we did not save a + b or A + b to an object
-# Also notice how a pound sign creates a comment? Kinda cool, right? Make comments to yourself.
+# Also notice how a pound sign creates a comment? Kinda cool, right? 
+# Always make comments to yourself.
 ls()
 
-#' Some caution, though. First, don't create objects with really complex names. To call them back 
-#' requires getting every character right in the console or script.  Why inconvenience yourself? 
-#' Second, R comes with some default objects that are kinda important and can seriously ruin 
-#' things downstream. I don't know off the top of my head all the default objects in R, but there 
-#' are some important ones like `TRUE`, and `FALSE` that you DO NOT want to overwrite. 
-#' `pi` is another one you should not overwrite, and `data` is a function that serves a specific
-#' purpose (even if you probably won't be using it a whole lot).
-#' You can, however, assign some built-in objects to new objects.
+#' Some caution, though. First, don't create objects with really complex names. 
+#' To call them back requires getting every character right in the console or 
+#' script.  Why inconvenience yourself?  Second, R comes with some default 
+#' objects that are kinda important and can seriously ruin things downstream. 
+#' I don't know off the top of my head all the default objects in R, but there 
+#' are some important ones like `TRUE`, and `FALSE` that you DO NOT want to 
+#' overwrite. `pi` is another one you should not overwrite, and `data` is a 
+#' function that serves a specific purpose (even if you probably won't be using 
+#' it a whole lot). You can, however, assign some built-in objects to new objects.
 
 this_Is_a_long_AND_WEIRD_objEct_name_and_yOu_shoUld_not_do_this <- 5
 pi # notice there are a few built-in functions/objects
 d <- pi # you can assign one built-in object to a new object.
 # pi <- 3.14 # don't do this....
 
-#' If you do something dumb (like overwrite `TRUE` with something), all hope is not lost. 
-#' Just remove the object in question with the `rm()` command.
+#' If you do something dumb (like overwrite `TRUE` with something), all hope 
+#' is not lost. Just remove the object in question with the `rm()` command.
 #' 
-#' ## Install/Load Libraries
+#' ### Install/Load Libraries
 #' 
 #' R depends on user-created libraries to do much of its functionality. This class will lean on just a 
 #' few R libraries. The first, `{tidyverse}` is our workhorse for workflow. It'll also be 
@@ -163,10 +186,12 @@ d <- pi # you can assign one built-in object to a new object.
 #' or Red Hat family.
 #' 
 #' 
-#' If you have yet to install these packages (and you almost certainly have not if you're opening R for the first time), install it as follows.
-#' Note that I'm just commenting out this command so it doesn't do this when I compile this script on my end. 
+#' If you have yet to install these packages (and you almost certainly have not 
+#' if you're opening R for the first time), install it as follows.
+#' Note that I'm just commenting out this command so it doesn't do this when 
+#' I compile this script on my end. 
 # Take out the comment...
-install.packages(c("tidyverse", "stevedata", "stevemisc", "stevetemplates", "lmtest"))
+# install.packages(c("tidyverse", "stevedata", "stevemisc", "stevetemplates", "lmtest"))
 
 #' Once they're all installed, you can load the libraries with the `library()` command. 
 #' Of note: you only need to install a package once, but you'll need to load the library 
@@ -178,19 +203,20 @@ library(tidyverse)
 library(stevedata)
 
 #' For those of you that are having `{tidyverse}` installation issues because of
-#' `{systemfonts}` needing some font-related development libraries, try this:
+#' `{systemfonts}` needing some font-related development libraries, try this.
+#' Again, take out the comments if you want this to run.
 #' 
-library(tibble)    # special data type we'll use
-library(magrittr)  # pipe operator
-library(dplyr)     # the workhorse
-library(readr)     # for reading particular data types.
-library(stevedata) # for data
+# library(tibble)    # special data type we'll use
+# library(magrittr)  # pipe operator
+# library(dplyr)     # the workhorse
+# library(readr)     # for reading particular data types.
+# library(stevedata) # for data
 
 #' These are the core packages that are in `{tidyverse}` that you should have 
 #' installed. Having `{tidyverse}` loads all of these. It's basically a wrapper.
 #' Here, you're just being explicit.
-
-#' ## Load Data
+#' 
+#' ### Load Data
 #' 
 #' Problem sets and lab scripts will lean on data I make available in `{stevedata}`. 
 #' However, you may often find that you want to download a data set from 
@@ -325,7 +351,7 @@ pwt_sample %>%
   slice(1) # womp womp. Forgot to group_by()
 
 #' I offer one caveat here. If you're applying a group-specific function (that you 
-#' need just once), it's generally advisable to "ungroup()" (i.e. `ungroup()`) as the 
+#' need just once), it's generally advisable to "ungroup" (i.e. `ungroup()`) as the 
 #' next function in your pipe chain. As you build together chains/pipes, the intermediate 
 #' output you get will advise you of any "groups" you've declared in your data. Don't
 #' lose track of those. This is incidentally why the `{tidyverse}` effectively
@@ -346,8 +372,9 @@ pwt_sample %>%
 #' ### `summarize()`
 #' 
 #' `summarize()` creates condensed summaries of your data, for whatever it is 
-#' that you want. Here, for example, is a kind of dumb way of seeing how many observations
-#' are in the data. `nrow(pwt_sample)` works just as well, but alas...
+#' that you want. Here, for example, is a kind of dumb way of seeing how many 
+#' observations are in the data. `nrow(pwt_sample)` works just as well, but 
+#' alas...
 
 pwt_sample %>%
   # How many observations are in the data?
@@ -469,7 +496,7 @@ pwt_sample %>%
 #' so-called "within" variable, or a transformation of a variable where
 #' it now communicates changes of some variable "within" a cross-sectional unit.
 #' 
-#' ### `filter()`
+#' ### filter()
 #' 
 #' `filter()` is a great diagnostic tool for subsetting your data to look at 
 #' particular observations. Notice one little thing, especially if you're new to 
