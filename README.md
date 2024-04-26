@@ -1,0 +1,5 @@
+# EH6127: Quantitative Methods
+
+This repository contains my course notes and other supporting material for EH6127, an MA class on quantitative methods for students in the Department of Economic History and International Relations at Stockholm University. 
+
+> The course builds on knowledge of quantitative methods from basic education in international relations and economic history, or equivalent social science method courses. The aim of the course is for the student to deepen their knowledge of and skills in statistical methods. As quantitative methods are used to an increasing extent in international social science research, these skills and knowledge are necessary if the student is to understand and evaluate what is written in, among other things, international journals in international relations and economic history. The course also introduces students to independently perform statistical analyses in statistical software and to exercises in presenting results from quantitative analyses in written form.
