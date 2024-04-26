@@ -1,0 +1,19 @@
+- title: "Problem Set #1"
+  filename: 1/eh6105-ps1
+  description: "The first problem set makes use of the [Systemic Banking Crises Database II](http://svmiller.com/stevedata/reference/SBCD.html) in [`{stevedata}`](http://svmiller.com/stevedata) to learn about basic data summary, data exploration, and data manipulation."
+
+- title: "Problem Set #2"
+  filename: 2/eh6105-ps2
+  description: "The second problem set makes use of the [National Epidemiologic Survey on Alcohol and Related Conditions (NESARC)](http://svmiller.com/stevedata/reference/nesarc_drinkspd.html) data set in [`{stevedata}`](http://svmiller.com/stevedata) to learn about basic descriptive statistics, recoding things, and, importantly, how you should always read the codebook."
+  
+- title: "Problem Set #3"
+  filename: 3/eh6105-ps3
+  description: "The third problem introduces students to simple bivariate linear regression by way of a classic chicken-and-egg problem in political science/IR: the relationship between democracy and economic development."
+  
+- title: "Problem Set #4"
+  filename: 4/eh6105-ps4
+  description: "The fourth problem set makes use of [replication data of Ghobarah et. al (2004)](http://svmiller.com/stevedata/reference/GHR04.html)) to prompt students to replicate a published analysis in the field of international relations."
+  
+- title: "Problem Set #5"
+  filename: 5/eh6105-ps5
+  description: "The final problem set makes use of [General Social Survey (GSS) data on attitudes about government spending](http://svmiller.com/stevedata/reference/gss_spending.html) in [`{stevedata}`](http://svmiller.com/stevedata) to learn about OLS model diagnostics. Students will also have the option of bootstrapping their regression model here if they want to go hardcore in the last question. Nothing in the course plan said I couldn't have you choose this path if I wanted.  😜"
