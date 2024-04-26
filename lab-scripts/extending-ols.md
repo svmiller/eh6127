@@ -3,10 +3,12 @@ title: "Extending the Linear Model"
 layout: lab
 permalink: /lab-scripts/lab-4/
 active: lab-scripts
-abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
-methods class that I teach at Stockholm University. It will not be the most sophisticated 
-R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
-for discussion around the associated R script for the week's 'lab' session."
+abstract: "This is a lab script will encourage you to not overthink the
+linear model. If you're comfortable with what it's telling you in the simple
+bivariate case, extending it to include other complexities (like interactions,
+fixed effects, or other inputs) is a really simple matter. Multiple regression
+partials out effects of other variables on the dependent variable. Don't
+sweat it too much.."
 output:
    md_document:
      variant: gfm

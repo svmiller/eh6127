@@ -1,12 +1,15 @@
 ---
-title: "Bivariate OLS"
+title: "The Bivariate Linear Model"
 layout: lab
 permalink: /lab-scripts/lab-3/
 active: lab-scripts
-abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
-methods class that I teach at Stockholm University. It will not be the most sophisticated 
-R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
-for discussion around the associated R script for the week's 'lab' session."
+abstract: "This lab scripts introduces students to the basic linear model in
+its bivariate form. Rather than use real-world data, we'll be using fake data
+we can create. Let this underscore that much of what we know about the linear
+model and what it tells us comes from simulation. Here, we can play God. We
+are not afforded that luxury in the real world, but the tools we use come 
+from situations where we can cosplay as the Almighty with respect to a 
+population we created."
 output:
    md_document:
      variant: gfm

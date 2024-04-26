@@ -3,10 +3,12 @@
 #' layout: lab
 #' permalink: /lab-scripts/lab-5/
 #' active: lab-scripts
-#' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
-#' methods class that I teach at Stockholm University. It will not be the most sophisticated 
-#' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
-#' for discussion around the associated R script for the week's 'lab' session."
+#' abstract: "The linear model works great until it doesn't. Alternatively: I
+#' accept the model's output only the extent to which I accept its assumptions
+#' and whether the model estimated satisfies those assumptions. There are myriad
+#' assumptions in the linear model and we can't possibly go over them all in
+#' the confines of a single lab session in such a hurried course on quantitative
+#' methods. We'll focus on a few key ones here."
 #' output:
 #'    md_document:
 #'      variant: gfm

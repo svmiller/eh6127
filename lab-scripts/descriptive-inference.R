@@ -1,12 +1,14 @@
 #' ---
-#' title: "Some Basics of Descriptive Inference"
+#' title: "Some Basics of Descriptive Statistics"
 #' layout: lab
 #' permalink: /lab-scripts/lab-2/
 #' active: lab-scripts
-#' abstract: "This is a lab script for [EH6105](http://eh6105.svmiller.com), a graduate-level quantitative 
-#' methods class that I teach at Stockholm University. It will not be the most sophisticated 
-#' R-related write-up of mine---check [my blog](http://svmiller.com/blog) for those---but it should be useful 
-#' for discussion around the associated R script for the week's 'lab' session."
+#' abstract: "This lab script will introduce students to some basic elements of
+#' descriptive statistics. Nothing here will be too exotic and assumes at least
+#' some rudimentary knowledge of measures of central tendency. The recurring 
+#' theme here is you should never trust a summary statistic without first 
+#' looking at your data. The best diagnostics are visual, and ultimately 
+#' anticipatory."
 #' output:
 #'    md_document:
 #'      variant: gfm
