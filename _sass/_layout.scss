@@ -343,6 +343,9 @@ ul#archive li span a:hover {
        border-bottom: #bdbdbd 1px solid;
 } */
 
+
+/* Last-minute stuff I added... */
+
 .lab-abstract {
   border-left: 4px solid $su-sky;
   border-top: 1px dotted $su-sky;
@@ -355,4 +358,58 @@ ul#archive li span a:hover {
     font-size: 18px;
     letter-spacing: -1px;
     font-style: italic;
+}
+
+.post p img {
+	float: right;
+	border: 0px $su-sky solid;
+	padding: 0px;
+	display:block;
+	margin-left: auto;
+	margin-right: auto;
+	background: $su-sky34;
+	width: 100%;
+}
+
+.post table {
+
+ margin: 0px auto;
+  padding-bottom: 30px;
+  padding-top: 30px;
+border-spacing: 0px;
+}
+
+.post table caption {
+	font-weight: bold;
+
+}
+
+
+
+.post table thead tr th {
+	margin: 0px;
+	padding: 5px;
+	font-weight: normal;
+	font-style: italic;
+	border-top: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+}
+
+.post tfoot {
+	border-top: 1px solid #000000;
+	font-size: .85em;
+	text-align: right;
+}
+
+.post tbody tr:last-child td {
+
+border-bottom: 1px solid #000000;
+
+}
+
+.post td {
+  padding-left: 10px;
+  padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
