@@ -44,14 +44,25 @@ component packages.
 # library(ggplot2)  # for plots
 ```
 
-## Creating Fake Data to Learn About OLS
+We’ll run one other command, because you may know how I feel by now
+about `{ggplot2}`’s default theme. I have `{stevethemes}` and I’d really
+like to use it here, but we want to stay strictly within `{tidyverse}`
+today. So, we’ll do this.
+
+``` r
+theme_set(theme_minimal())
+```
+
+Cool beans. Let’s get going.
+
+## Creating Fake Data to Learn About the Linear Model
 
 The lecture uses actual (toy) data from the World Bank to introduce you
 to the linear model in the bivariate case. Now, I think it might be time
 for you to get it in the completely “fabricated” sense. In this lab
 script, you are going to create data that you will use to learn more
-about what OLS regression is and what the `lm()` output in R is telling
-you.
+about what the linear model with its OLS esimator is telling you (by way
+of `lm()` output).
 
 Take careful inventory of what’s going to happen here. We’re going to
 set a reproducible seed, and then we’re going to create two new “random”
@@ -165,7 +176,7 @@ There are two ways of doing this. Here’s the base R way.
 plot(density(Fake$x))
 ```
 
-![](figs/lab-3/unnamed-chunk-7-1.png)<!-- -->
+![](figs/lab-3/unnamed-chunk-8-1.png)<!-- -->
 
 Here, we see the data look nice and “normal” with a clear central
 tendency and a shape approximating a true bell curve.
@@ -180,14 +191,14 @@ Fake %>%
   geom_density() 
 ```
 
-![](figs/lab-3/unnamed-chunk-8-1.png)<!-- -->
+![](figs/lab-3/unnamed-chunk-9-1.png)<!-- -->
 
-ggplot’s defaults want to draw attention to the fact that there’s more a
-left skew than a right skew. In other words, the maximum of *x* is ~2.02
-whereas the minimum is about -2.59, but the shape of the data still look
-normal. Any irregularities in shape could be attributed to the fact we
-only drew 100 observations, which is fairly small set of observations
-(all things considered).
+`ggplot()`’s defaults want to draw attention to the fact that there’s
+more a left skew than a right skew. In other words, the maximum of *x*
+is ~2.02 whereas the minimum is about -2.59, but the shape of the data
+still look normal. Any irregularities in shape could be attributed to
+the fact we only drew 100 observations, which is fairly small set of
+observations (all things considered).
 
 We can do the same thing for the outcome variable *y*.
 
@@ -195,9 +206,9 @@ We can do the same thing for the outcome variable *y*.
 plot(density(Fake$y))
 ```
 
-![](figs/lab-3/unnamed-chunk-9-1.png)<!-- -->
+![](figs/lab-3/unnamed-chunk-10-1.png)<!-- -->
 
-Also, in ggplot.
+Also, in `{ggplot2}` format…
 
 ``` r
 Fake %>%
@@ -205,7 +216,7 @@ Fake %>%
   geom_density()
 ```
 
-![](figs/lab-3/unnamed-chunk-10-1.png)<!-- -->
+![](figs/lab-3/unnamed-chunk-11-1.png)<!-- -->
 
 It’s worth reiterating the *y* is “endogenously” created, and the only
 endogenous part of our data set. It is an outcome of two exogenous
@@ -274,7 +285,7 @@ Fake %>%
 #> `geom_smooth()` using formula = 'y ~ x'
 ```
 
-![](figs/lab-3/unnamed-chunk-12-1.png)<!-- -->
+![](figs/lab-3/unnamed-chunk-13-1.png)<!-- -->
 
 ## How to Evaluate Your Linear Model Output
 
@@ -321,15 +332,15 @@ coefficient over the standard error. When the absolute value of that
 *t*-statistic is large, and its associated *p*-value falls below some
 threshold of interest to you, you can reject the null hypothesis and
 assert that what you observed is highly improbable if the true effect is
-0. That’s indeed the case here. The true effect is 1. We observed 1.06.
-The *t*-statistic associated with that coefficient and standard error is
-about 9.9. That’s comically large, given the distribution of Student’s
-*t* for 98 degrees of freedom. The probability of observing what we got
-is basically 0 if the true effect were 0 (and it’s not, because it’s 1).
-So, you can reject the null hypothesis and assert that what you got is
-closer to what it truly is, assuming repeated sampling and fixed
-population parameters. The first part of that may not apply here, but
-the second one does. We created the data.
+0 with precision. That’s indeed the case here. The true effect is 1. We
+observed 1.06. The *t*-statistic associated with that coefficient and
+standard error is about 9.9. That’s comically large, given the
+distribution of Student’s *t* for 98 degrees of freedom. The probability
+of observing what we got is basically 0 if the true effect were 0 (and
+it’s not, because it’s 1). So, you can reject the null hypothesis and
+assert that what you got is closer to what it truly is, assuming
+repeated sampling and fixed population parameters. The first part of
+that may not apply here, but the second one does. We created the data.
 
 ### What About the Intercept?
 
@@ -346,7 +357,7 @@ Here’s another way of illustrating this. Let’s create another variable,
 *y2*. It has this formula.
 
 ``` r
-# I could alternatively write this as just y2 = x + e.
+# I could alternatively write this as just `y2 = x + e`.
 Fake %>%
   mutate(y2 = 0 + x  + e) -> Fake
 
@@ -420,12 +431,12 @@ Fake %>%
 #> 1 5.001493 0.001493478
 ```
 
-# Other Things You Should Know About Your OLS Model
+## Other Things You Should Know About Your OLS Model
 
 I’ll go into the other things you should know about the OLS model, based
 loosely on the order of importance of them.
 
-## Fitted Values and Residuals
+### Fitted Values and Residuals
 
 The OLS model draws a line of best fit through the data and that line of
 best fit is the one that minimizes the sum of squared prediction errors.
@@ -551,7 +562,7 @@ biasing coefficients (making it more difficult to identify signals from
 the din).
 
 I do want to draw your attention to a few things. For one, in the simple
-bivariate case, R-squared is quite literally Pearson’s R, squared.
+bivariate case, R-squared is quite literally Pearson’s *r*, squared.
 Observe.
 
 ``` r
@@ -570,17 +581,17 @@ summary(M1)$r.squared
 ```
 
 Second, you’ll see something called an adjusted R-squared. Simply, think
-of this as a kind of penalty that downweights the normal (“multiple”)
-R-squared for the presence of additional parameters. It’s why it’ll
-always want to be smaller than the other R-squared metric you see.
-Here’s the hard way of calculating what comes default in R.
+of this as a kind of penalty that downweights (sic?) the normal
+(“multiple”) R-squared for the presence of additional parameters. It’s
+why it’ll always want to be smaller than the other R-squared metric you
+see. Here’s the hard way of calculating what comes default in R.
 
 ``` r
 (1 - ((1-summary(M1)$r.squared)*(nobs(M1)-1)/(nobs(M1)-length(M1$coefficients))))
 #> [1] 0.496658
 ```
 
-In plain English: adjusted R-squared = 1 - (1 - R^2)\*(n - 1)/n - k. In
+In plain English: adjusted R-squared = `1 - (1 - R^2)*(n - 1)/n - k`. In
 this case, the difference is small, but the adjusted R-squared is
 telling you have more than one parameter here (i.e. the intercept).
 
@@ -663,7 +674,7 @@ summary(M3)
 ```
 
 See that *p*-value with that *F* statistic? I can’t say that this model
-performs any better than an intercept only model. Well, duh.
+performs any better than an intercept only model. fWell, duh.
 
 ## Conclusion
 

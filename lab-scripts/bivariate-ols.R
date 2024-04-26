@@ -17,14 +17,16 @@
 knitr::opts_chunk$set(collapse = TRUE, 
                       fig.path = "figs/lab-3/",
                       cache.path = "cache/lab-3/",
+                      fig.width = 11,
                       comment = "#>")
 #+
 
 
 #' ## R Packages/Data for This Session
 #' 
-#' You should've already installed the R packages for this lab session. `{tidyverse}` 
-#' will be for all things workflow and that's all we'll be using today.
+#' You should've already installed the R packages for this lab session. 
+#' `{tidyverse}` will be for all things workflow and that's all we'll be using 
+#' today.
 
 library(tidyverse)
 
@@ -37,13 +39,22 @@ library(tidyverse)
 # library(tibble)   # for tibbles
 # library(ggplot2)  # for plots
 
-#' ## Creating Fake Data to Learn About OLS
+#' We'll run one other command, because you may know how I feel by now about
+#' `{ggplot2}`'s default theme. I have `{stevethemes}` and I'd really like to 
+#' use it here, but we want to stay strictly within `{tidyverse}` today. So, 
+#' we'll do this.
+
+theme_set(theme_minimal())
+
+#' Cool beans. Let's get going.
+#' 
+#' ## Creating Fake Data to Learn About the Linear Model
 #' 
 #' The lecture uses actual (toy) data from the World Bank to introduce you to the
 #' linear model in the bivariate case. Now, I think it might be time for you to 
 #' get it in the completely "fabricated" sense. In this lab script, you are going 
-#' to create data that you will use to learn more about what OLS regression is 
-#' and what the `lm()` output in R is telling you.
+#' to create data that you will use to learn more about what the linear model 
+#' with its OLS esimator is telling you (by way of `lm()` output).
 #' 
 #' Take careful inventory of what's going to happen here. We're going to set a 
 #' reproducible seed, and then we're going to create two new "random" variables, 
@@ -63,7 +74,8 @@ Fake
 #' and yes they were created by the same command. However, the generation of *x* 
 #' and *e* are simultaneously created, but completely independent from each other. 
 #' If they were correlated with each other, that would violate a major assumption 
-#' about endogeneity in the linear model (that we'll belabor in another lab script).
+#' about endogeneity in the linear model (that we'll belabor in another lab 
+#' script).
 #' 
 #' You can test that we successfully pulled this off with a correlation test.
 #' 
@@ -116,18 +128,18 @@ Fake %>%
   ggplot(.,aes(x)) +
   geom_density() 
 #'
-#' ggplot's defaults want to draw attention to the fact that there's more a left 
-#' skew than a right skew. In other words, the maximum of *x* is ~2.02 whereas 
-#' the minimum is about -2.59, but the shape of the data still look normal. Any 
-#' irregularities in shape could be attributed to the fact we only drew 100
-#' observations, which is fairly small set of observations (all things 
+#' `ggplot()`'s defaults want to draw attention to the fact that there's more a 
+#' left  skew than a right skew. In other words, the maximum of *x* is ~2.02 
+#' whereas  the minimum is about -2.59, but the shape of the data still look 
+#' normal. Any  irregularities in shape could be attributed to the fact we only 
+#' drew 100 observations, which is fairly small set of observations (all things 
 #' considered).
 #' 
 #' We can do the same thing for the outcome variable *y*.
 #' 
 plot(density(Fake$y))
 #'
-#' Also, in ggplot.
+#' Also, in `{ggplot2}` format...
 #' 
 Fake %>%
   ggplot(.,aes(y)) +
@@ -201,37 +213,46 @@ Fake %>%
 #' scientists wish you'd stop misusing](https://gizmodo.com/10-scientific-ideas-that-scientists-wish-you-would-stop-1591309822).
 #' Briefly:
 #' 
-#' > "Statistically significant" is one of those phrases scientists would love to have a
-#'  chance to take back and rename. "Significant" suggests importance; but the test of 
-#'  statistical significance, developed by the British statistician R.A. Fisher, doesn't 
-#'  measure the importance or size of an effect; only whether we are able to distinguish it,
-#'   using our keenest statistical tools, from zero. "Statistically noticeable" or 
-#'   "Statistically discernible" would be much better.
+#' > "Statistically significant" is one of those phrases scientists would love 
+#' to have a chance to take back and rename. "Significant" suggests importance; 
+#' but the test of  statistical significance, developed by the British 
+#' statistician R.A. Fisher, doesn't measure the importance or size of an 
+#' effect; only whether we are able to distinguish it, using our keenest 
+#' statistical tools, from zero. "Statistically noticeable" or "Statistically 
+#' discernible" would be much better.
 #'   
-#' Notice what this means for what you're doing. You're not testing, necessarily, whether you've identified the
-#' "true" effect when you evaluate statistical significance. You're testing whether you could rule out something
-#' else: 0. That's at least what gets returned to you here, and the *t*-statistic that gets reported is
-#' conveniently just the coefficient over the standard error. When the absolute value of that *t*-statistic
-#' is large, and its associated *p*-value falls below some threshold of interest to you, you can reject
-#' the null hypothesis and assert that what you observed is highly improbable if the true effect is 0.
-#' That's indeed the case here. The true effect is 1. We observed 1.06. The *t*-statistic associated with
-#' that coefficient and standard error is about 9.9. That's comically large, given the distribution of Student's *t*
-#' for 98 degrees of freedom. The probability of observing what we got is basically 0 if the true effect were 0 (and
-#' it's not, because it's 1). So, you can reject the null hypothesis and assert that what you got is closer to what
-#' it truly is, assuming repeated sampling and fixed population parameters. The first part of that may not apply here,
+#' Notice what this means for what you're doing. You're not testing, necessarily, 
+#' whether you've identified the "true" effect when you evaluate statistical 
+#' significance. You're testing whether you could rule out something else: 0. 
+#' That's at least what gets returned to you here, and the *t*-statistic that 
+#' gets reported is conveniently just the coefficient over the standard error. 
+#' When the absolute value of that *t*-statistic is large, and its associated 
+#' *p*-value falls below some threshold of interest to you, you can reject the 
+#' null hypothesis and assert that what you observed is highly improbable if the 
+#' true effect is 0 with precision. That's indeed the case here. The true effect 
+#' is 1. We observed 1.06. The *t*-statistic associated with that coefficient 
+#' and standard error is about 9.9. That's comically large, given the 
+#' distribution of Student's *t* for 98 degrees of freedom. The probability of 
+#' observing what we got is basically 0 if the true effect were 0 (and it's not, 
+#' because it's 1). So, you can reject the null hypothesis and assert that 
+#' what you got is closer to what it truly is, assuming repeated sampling and 
+#' fixed population parameters. The first part of that may not apply here,
 #' but the second one does. We created the data.
 #' 
 #' ### What About the Intercept?
 #' 
-#' You don't evaluate "statistical significance" in the same way for the *y*-intercept. There is no "null hypothesis"
-#' to note in the context of the intercept. It's just an estimate of *y* when *x* is 0. Here, we are adequately
-#' capturing it's true value (i.e. it's actually 5, but we got 4.94). Dividing that estimated intercept over its
-#' standard error returns a ridiculously large *t*-statistic that means you can comfortably rule out 0. Then again,
+#' You don't evaluate "statistical significance" in the same way for the 
+#' *y*-intercept. There is no "null hypothesis" to note in the context of the 
+#' intercept. It's just an estimate of *y* when *x* is 0. Here, we are adequately
+#' capturing it's true value (i.e. it's actually 5, but we got 4.94). Dividing 
+#' that estimated intercept over its standard error returns a ridiculously 
+#' large *t*-statistic that means you can comfortably rule out 0. Then again, 
 #' you weren't testing that it's 0. It's just some constant baseline for *y*.
 #' 
-#' Here's another way of illustrating this. Let's create another variable, *y2*. It has this formula.
+#' Here's another way of illustrating this. Let's create another variable, *y2*. 
+#' It has this formula.
 #' 
-# I could alternatively write this as just y2 = x + e.
+# I could alternatively write this as just `y2 = x + e`.
 Fake %>%
   mutate(y2 = 0 + x  + e) -> Fake
 
@@ -242,17 +263,21 @@ Fake
 M2 <- lm(y2 ~ x, Fake)
 summary(M2)
 
-#' Notice *x* is unaffected, but now the *y*-intercept is "statistically insignificant?" Except that it's not,
-#' because that's not how you should evaluate the *y*-intercept. The statistics you get back just tell you the 
+#' Notice *x* is unaffected, but now the *y*-intercept is "statistically 
+#' insignificant?" Except that it's not, because that's not how you should 
+#' evaluate the *y*-intercept. The statistics you get back just tell you the 
 #' estimated value of *y* when *x* is 0 could be 0 (because that's what it is).
 #' 
-#' This is often why you'll read regression tables that just outright omit the *y*-intercept and take no effort
-#' to model them. I'll only retort that you may encounter or want to learn more complicated models, so called 
-#' "mixed (effects) models", that include random intercepts for different grouping clusters in a data set. For
-#' those models to converge, they'll often need a so-called "global" intercept in order to know against what 
-#' baseline a group may vary. This is why I encourage students to get comfortable with scaling inputs into
-#' the model in order to create more meaningful *y*-intercepts that, with real world data, might tell the
-#' reader (and yourself) something about the typical value of *y*.
+#' This is often why you'll read regression tables that just outright omit the 
+#' *y*-intercept and take no effort to model them. I'll only retort that you 
+#' may encounter or want to learn more complicated models, so called "mixed 
+#' (effects) models", that include random intercepts for different grouping 
+#' clusters in a data set. For those models to converge, they'll often need a 
+#' so-called "global" intercept in order to know against what baseline a group 
+#' may vary. This is why I encourage students to get comfortable with scaling 
+#' inputs into the model in order to create more meaningful *y*-intercepts 
+#' that, with real world data, might tell the reader (and yourself) something 
+#' about the typical value of *y*.
 #' 
 #' Indeed, that's what the intercept is communicating here, plus-or-minus error.
 #' 
@@ -260,17 +285,18 @@ Fake %>%
   summarize(mean_y = mean(y),
             mean_y2 = mean(y2)) %>% data.frame
 
-#' # Other Things You Should Know About Your OLS Model
+#' ## Other Things You Should Know About Your OLS Model
 #' 
-#' I'll go into the other things you should know about the OLS model, based loosely on the order of importance
-#' of them.
+#' I'll go into the other things you should know about the OLS model, based 
+#' loosely on the order of importance of them.
 #' 
-#' ## Fitted Values and Residuals
+#' ### Fitted Values and Residuals
 #' 
-#' The OLS model draws a line of best fit through the data and that line of best fit is the one that minimizes
-#' the sum of squared prediction errors. This means there are estimates for a particular data point, given this line
-#' of "best fit", and invariably an "error" (which is the distance between the estimated value of *y*, and what the "true"
-#' value of *y* is).
+#' The OLS model draws a line of best fit through the data and that line of best
+#' fit is the one that minimizes the sum of squared prediction errors. This 
+#' means there are estimates for a particular data point, given this line of 
+#' "best fit", and invariably an "error" (which is the distance between the 
+#' estimated value of *y*, and what the "true" value of *y* is).
 #' 
 #' In R speak, these are the fitted values and the residuals. The fitted values are the estimated values of *y* for each
 #' data point (given the regressors). You may also call these the *y*-hats. The residuals are the distances between what
@@ -310,8 +336,8 @@ summary(M1)
 #' 
 broom::augment(M1)
 
-#' You obviously get other output with this function, which will come in handy when we delve into model
-#' diagnostics in earnest.
+#' You obviously get other output with this function, which will come in handy 
+#' when we delve into model diagnostics in earnest.
 #' 
 #' ### R-Squared
 #' 
@@ -325,7 +351,7 @@ broom::augment(M1)
 #' the din).
 #' 
 #' I do want to draw your attention to a few things. For one, in the simple bivariate case, R-squared is
-#' quite literally Pearson's R, squared. Observe.
+#' quite literally Pearson's *r*, squared. Observe.
 #' 
 Fake %>% summarize(cor = cor(x, y), 
                    cor2 = cor^2) -> correlations
@@ -335,18 +361,21 @@ correlations %>% pull(2)
 summary(M1)$r.squared
 
 
-#' Second, you'll see something called an adjusted R-squared. Simply, think of this as a kind of penalty that
-#' downweights the normal ("multiple") R-squared for the presence of additional parameters. It's why it'll
-#' always want to be smaller than the other R-squared metric you see. Here's the hard way of calculating
-#' what comes default in R.
+#' Second, you'll see something called an adjusted R-squared. Simply, think of 
+#' this as a kind of penalty that downweights (sic?) the normal ("multiple") 
+#' R-squared for the presence of additional parameters. It's why it'll always 
+#' want to be smaller than the other R-squared metric you see. Here's the hard 
+#' way of calculating what comes default in R.
 #' 
 (1 - ((1-summary(M1)$r.squared)*(nobs(M1)-1)/(nobs(M1)-length(M1$coefficients))))
 
-#' In plain English: adjusted R-squared  = 1 - (1 - R^2)*(n - 1)/n - k. In this case, the difference is small,
-#' but the adjusted R-squared is telling you have more than one parameter here (i.e. the intercept).
+#' In plain English: adjusted R-squared  = `1 - (1 - R^2)*(n - 1)/n - k`. In 
+#' this case, the difference is small, but the adjusted R-squared is telling 
+#' you have more than one parameter here (i.e. the intercept).
 #' 
-#' Long story short: a high R-squared is nice, but it's not necessary for identifying a causal effect of *x* on *y*.
-#' There's no agreement on what a "good R-squared" looks like. 
+#' Long story short: a high R-squared is nice, but it's not necessary for 
+#' identifying a causal effect of *x* on *y*. There's no agreement on what a 
+#' "good R-squared" looks like. 
 #' 
 #' ###  Residual Standard Error
 #' 
@@ -387,8 +416,8 @@ Fake %>%
 M3 <- lm(y ~ noise, data=Fake)
 summary(M3)
 
-#' See that *p*-value with that *F* statistic? I can't say that this model performs any better than an intercept only model.
-#' Well, duh.
+#' See that *p*-value with that *F* statistic? I can't say that this model 
+#' performs any better than an intercept only model. fWell, duh.
 #'
 #' ## Conclusion
 #'
