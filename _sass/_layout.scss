@@ -342,3 +342,17 @@ article ul#archive > li:before {
 ul#archive li span a:hover {
        border-bottom: #bdbdbd 1px solid;
 } */
+
+.lab-abstract {
+  border-left: 4px solid $su-sky;
+  border-top: 1px dotted $su-sky;
+  border-bottom: 1px dotted $su-sky;
+  border-right: 1px dotted $su-sky;
+  border-radius: 4px 4px 4px 0;
+  margin-bottom: 20px;
+  background: $su-sky20;
+  padding: $spacing-unit / 2;
+    font-size: 18px;
+    letter-spacing: -1px;
+    font-style: italic;
+}
