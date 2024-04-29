@@ -15,6 +15,28 @@ output:
      preserve_yaml: TRUE
 ---
 
+## Elsewhere in My R Cinematic Universe
+
+I will be doing *a lot* of self-plagiarism in this particular script. I
+taught earlier versions of to MA students [in this
+department](http://eh6105.svmiller.com/lab-scripts/ols-diagnostics.html),
+and [to PhD students at my previous
+employer](http://post8000.svmiller.com/lab-scripts/ols-diagnostics-lab.html).
+This version is a bit more streamlined, but the verbosity of previous
+versions of it might be useful to look over for you.
+
+I’ve also written elsewhere about [how cool bootstrapping
+is](http://svmiller.com/blog/2020/03/bootstrap-standard-errors-in-r/),
+and about assorted [heteroskedasticity robust standard
+errors](http://svmiller.com/blog/2024/01/linear-model-diagnostics-by-ir-example/).
+The latter of the two has an IR application you might find interesting.
+The former is illustrative of what exactly the procedure is doing and
+how you could do it yourself.
+
+If I link it here, it’s because I’m asking you to look at it. Look at it
+as it might offer greater insight into what I’m doing and what I’m
+trying to tell you.
+
 ## R Packages/Data for This Session
 
 You should’ve already installed the R packages for this lab session.
@@ -62,92 +84,110 @@ library(lmtest)
 #> The following objects are masked from 'package:base':
 #> 
 #>     as.Date, as.Date.numeric
-library(modelsummary) # optional, but you'll love it. Install it.
-library(fixest) # optional, but you'll love it and should install it.
-library(modelr) # for bootstrapping, also optional.
-
+library(sandwich)
+library(modelsummary)
+options("modelsummary_factory_default" = "kableExtra")
 theme_set(theme_steve()) # optional, but I want it...
 ```
 
 ## The Data We’ll Be Using
 
-I’ll be using the `ESS9GB` data set in `{stevedata}`. You can find more
-information about this data set by typing this into your Rstudio
+I’ll be using the `states_war` data set in `{stevedata}`. You can find
+more information about this data set by typing this into your RStudio
 console.
 
 ``` r
-?ESS9GB
+?states_war
 ```
 
-You can also go to my website to read more about it too.
+The data offer an opportunity to explore the correlates of performance
+in war in a way inspired by [Valentino et
+al. (2010)](https://doi.org/10.1017/S0022381609990831). The authors
+primarily focus on democracy and how democracies allegedly minimize the
+costs of war through assorted means. We’ll do the same here.
 
-- [What Do We Know About British Attitudes Toward Immigration? A
-  Pedagogical Exercise of Sample Inference and
-  Regression](http://svmiller.com/blog/2020/03/what-explains-british-attitudes-toward-immigration-a-pedagogical-example/)
-
-Let’s suppose we want to model how positively Brits think about
-immigration and immigrants in this European Social Survey round from
-2018-19. That information is captured in the `immigsent` variable in the
-data set, itself an additive index of three other variables. Following
-the stuff I put on my website, I want to understand attitudes about
-immigration and immigrants as a function of the respondent’s age in
-years (`agea`), whether the respondent is a woman (`female`), years of
-education (`eduyrs`), whether the respondent is temporarily unemployed
-but looking for work (`uempla`), the household income of the respondent
-(in deciles, `hinctnta`), and the respondent’s ideology on an 11-point
-left-right scale (`lrscale`). Higher values of `immigsent` indicates
-greater positive orientation or receptiveness to immigrants/immigration.
+Let’s offer a spiritual replication of the second model of Table 1,
+focusing on military fatalities (which is the explicit focus of the
+Gibler-Miller conflict data we’ll be using). However, we need to create
+some variables. First, we’re going to create a kind of “loss exchange
+ratio” variable. Formally, this variable is equal to the fatalities
+imposed on the enemy combatant(s) divided over the fatalities suffered
+by the state, adding 1 to the denominator of that equation to prevent
+division by 0. We’ll create this one, and another that’s proportional
+(i.e. imposed fatalities over imposed fatalities and state’s own
+fatalities). Play with this to your heart’s content.[^1] Second, we’re
+going to create an initiator variable (`init`) to isolate those states
+that make conscious forays into war. From my experience creating data
+for `{peacesciencer}`, it is usually (though not always) the case that
+you can discern initiation from whether it’s on the Side A and/or it’s
+an original participant. To get to the point, the initiator variable
+will be 1 if 1) it’s on Side A (i.e. the side that made the first
+incident) *and* it’s an original participant and 2) if it’s *not* an
+original participant (often meaning it self-selected into the conflict).
+Otherwise, it will be a 0.
 
 ``` r
-M1 <- lm(immigsent ~ agea + female + eduyrs + uempla + hinctnta + lrscale, 
-         ESS9GB, na.action = na.exclude)
+# M1 <- lm(jci ~ literacy_ba + s_leperc*s_partydom + turnout, A)
+states_war %>%
+  mutate(ler = oppfatalmin/(fatalmin + 1),
+         lerprop = oppfatalmin/(fatalmin + oppfatalmin),
+         init = case_when(
+           sidea == 1 & orig == 1 ~ 1,
+           orig == 0 ~ 1,
+           TRUE ~ 0
+  )) -> Data
 ```
 
-Notice the `na.action = na.exclude` argument in the `lm()` function. For
-most real world data sets where you want R to ignore the missing data,
-but maintain the original dimensions of the data set, you’ll want to
-include this argument in the formula.
+Now, let’s do a kind-of replication of the second model in Table 1,
+where we’ll model the first loss exchange ratio variable (LER) we
+created (`ler`) as a function of democracy (`xm_qudsest`), GDP per
+capita (`wbgdppc2011est`), the initiator variable (`init`), the military
+expenditures of the state (`milex`), the duration of the participant’s
+stay in conflict (`mindur`), and the familiar estimate of power provided
+by CoW’s National Material Capabilities data as the composite index of
+national capabilities (`cinc`).
 
-This regression returns the following results. We observe significant
-partial associations ideology, household income, and years of education,
-though we see no discernible associations/effects for age, the
-respondent’s gender, and the unemployment variable. The unemployment
-variable might be a little surprising from the political economy of
-immigration framework, but see [this paper of
-mine](http://svmiller.com/research/economic-anxiety-ethnocentrism-immigration-1992-2017/)
-for skepticism about these arguments in the American context and see
-this [blog
-post](http://svmiller.com/blog/2021/02/thinking-about-your-priors-bayesian-analysis/)
-that riffs on the unemployment effect as a weak data problem.
+``` r
+M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + 
+           xm_qudsest + mindur + cinc, 
+         Data)
+```
+
+Okie doke, let’s see what we got.
 
 ``` r
 summary(M1)
 #> 
 #> Call:
-#> lm(formula = immigsent ~ agea + female + eduyrs + uempla + hinctnta + 
-#>     lrscale, data = ESS9GB, na.action = na.exclude)
+#> lm(formula = ler ~ xm_qudsest + wbgdppc2011est + init + milex + 
+#>     xm_qudsest + mindur + cinc, data = Data)
 #> 
 #> Residuals:
 #>      Min       1Q   Median       3Q      Max 
-#> -20.8172  -3.9026   0.5488   4.6513  17.1745 
+#> -1710.43    -4.76     4.30    15.07  2231.12 
 #> 
 #> Coefficients:
-#>             Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept) 11.65506    1.06062  10.989  < 2e-16 ***
-#> agea        -0.00185    0.01013  -0.183    0.855    
-#> female      -0.24834    0.33773  -0.735    0.462    
-#> eduyrs       0.48809    0.04878  10.007  < 2e-16 ***
-#> uempla      -1.10153    1.20362  -0.915    0.360    
-#> hinctnta     0.33757    0.06139   5.498 4.52e-08 ***
-#> lrscale     -0.58259    0.08813  -6.611 5.37e-11 ***
+#>                  Estimate Std. Error t value Pr(>|t|)    
+#> (Intercept)     3.117e+01  6.224e+01   0.501    0.617    
+#> xm_qudsest      9.453e+00  1.655e+01   0.571    0.568    
+#> wbgdppc2011est -3.328e+00  7.472e+00  -0.445    0.656    
+#> init           -8.634e+00  2.762e+01  -0.313    0.755    
+#> milex           5.969e-06  4.493e-07  13.285   <2e-16 ***
+#> mindur         -5.570e-03  2.240e-02  -0.249    0.804    
+#> cinc           -1.420e+02  2.005e+02  -0.709    0.479    
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Residual standard error: 6.383 on 1447 degrees of freedom
-#>   (451 observations deleted due to missingness)
-#> Multiple R-squared:  0.1485, Adjusted R-squared:  0.145 
-#> F-statistic: 42.08 on 6 and 1447 DF,  p-value: < 2.2e-16
+#> Residual standard error: 192.4 on 245 degrees of freedom
+#>   (32 observations deleted due to missingness)
+#> Multiple R-squared:  0.4417, Adjusted R-squared:  0.428 
+#> F-statistic:  32.3 on 6 and 245 DF,  p-value: < 2.2e-16
 ```
+
+I can already anticipate some design decisions got us to this point, but
+the model suggests only military expenditures matter to understanding
+performance in war. Higher values of military expenditures coincide with
+higher LER. That tracks, at least.
 
 Now, let’s do some diagnostic testing.
 
@@ -169,15 +209,10 @@ for any irregularities. By definition, the “rise over run” line is flat
 at 0. The LOESS smoother will communicate whether that’s actually a line
 of good fit.
 
-First, let’s use the `augment()` function in `{broom}` to extract some
-pertinent information from the model and store it in the data itself.
-
-``` r
-broom::augment(M1, data=ESS9GB) -> ESS9GB
-```
-
-Now, let’s create the plot. There’s actually a base R function that will
-do this for you beginners.
+Base R has a function that can do this for you. `plot()` is a default
+function in R that, if applied to an object created by `lm()`, will
+create a battery of graphs for you. You just want the first one, which
+you can specify with the `which` argument. Observe.
 
 ``` r
 plot(M1, which=1)
@@ -185,11 +220,39 @@ plot(M1, which=1)
 
 ![](figs/lab-5/unnamed-chunk-7-1.png)<!-- -->
 
-You should do this in `{ggplot2}` though, because there’s more you can
-do with it.
+Eww, gross. That shouldn’t look like that. Gross.
+
+You may also want to use this an opportunity to learn about the
+`augment()` function in `{broom}`. You can use this to extract pertinent
+information from the model. First, let’s see what comes out.
 
 ``` r
-ESS9GB %>%
+broom::augment(M1)
+#> # A tibble: 252 × 14
+#>    .rownames     ler xm_qudsest wbgdppc2011est  init milex mindur    cinc
+#>    <chr>       <dbl>      <dbl>          <dbl> <dbl> <dbl>  <dbl>   <dbl>
+#>  1 1          0.0270   -1.58              7.36     0   672    259 0.00559
+#>  2 2         35.7       0.376             8.42     1 36520    259 0.298  
+#>  3 3          0.933    -1.58              1.55     1   211    122 0.00353
+#>  4 5          0.593    -1.58              7.93     1  1270    527 0.0114 
+#>  5 6          1.57     -1.05              6.54     0  6278    527 0.0714 
+#>  6 9         76        -0.0626            8.22     1 16462    257 0.0441 
+#>  7 10        78         0.00633           8.15     1 12506    257 0.0289 
+#>  8 11        15.9       0.226             8.63     1 37508    257 0.127  
+#>  9 12         2.09      0.981             8.88     1 38588    257 0.185  
+#> 10 13         7.56      0.737             8.98     1 63547    257 0.169  
+#> # ℹ 242 more rows
+#> # ℹ 6 more variables: .fitted <dbl>, .resid <dbl>, .hat <dbl>, .sigma <dbl>,
+#> #   .cooksd <dbl>, .std.resid <dbl>
+# ?augment.lm() # for more information
+```
+
+We want just the fitted values and the residuals here. The former goes
+on the *x*-axis and the latter goes on the *y*-axis for the plot to
+follow.
+
+``` r
+broom::augment(M1) %>%
   ggplot(.,aes(.fitted, .resid)) +
   geom_point(pch = 21) +
   geom_hline(yintercept = 0, linetype="dashed", color="red") +
@@ -197,12 +260,276 @@ ESS9GB %>%
 #> `geom_smooth()` using formula = 'y ~ x'
 ```
 
-![](figs/lab-5/unnamed-chunk-8-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-9-1.png)<!-- -->
 
-Oh yeah, that’s not ideal. The fitted-residual plot is broadly useful
-for other things too (i.e. it’s pointing to some discreteness in the
-DV), but it’s also pointing to a line through the data that looks like a
-water slide.
+Again, gross. Just, eww. Gross.
+
+You should’ve anticipated this in advance if you had some subject domain
+expertise. These are large nominal numbers, in war, that could be
+decicedly lopsided. For example, here’s the U.S. performance against
+Iraq in the Gulf War.
+
+``` r
+Data %>% filter(ccode == 2 & micnum == 3957) %>%
+  select(micnum:enddate, fatalmin, oppfatalmin, ler)
+#> # A tibble: 1 × 7
+#>   micnum ccode stdate    enddate  fatalmin oppfatalmin   ler
+#>    <dbl> <dbl> <chr>     <chr>       <dbl>       <dbl> <dbl>
+#> 1   3957     2 7/24/1990 1/2/1992      153        4137  26.9
+```
+
+In other words, the U.S. killed almost 27 Iraqi troops for every
+American soldier killed by the Iraqi military. That’s great for
+battlefield performance from the perspective of the Department of
+Defense, but it’s going to point to some data issues for the analyst.
+
+Indeed, here’s what the dependent variable looks like.
+
+``` r
+Data %>%
+  ggplot(.,aes(ler)) +
+  geom_density()
+```
+
+![](figs/lab-5/unnamed-chunk-11-1.png)<!-- -->
+
+Here, btw, is what it’s natural logarithm would look like, and what the
+proportion variable we created would look like by way of comparison.
+Believe me when I say I know what I’m doing with the code here. Trust
+me; I’m a doctor.
+
+``` r
+Data %>%
+  select(ler, lerprop) %>%
+  mutate(log_ler = log(ler + 1)) %>%
+  gather(var, val) %>%
+  ggplot(.,aes(val)) +
+  geom_density() +
+  facet_wrap(~var, scales='free', nrow= 3)
+```
+
+![](figs/lab-5/unnamed-chunk-12-1.png)<!-- -->
+
+The linear model does not require normally distributed DVs in order to
+extract (reasonably) linear relationships. However, we should’ve not
+done this, and we should’ve known in advance that we should not have
+done this. So, let’s take a step back and re-estimate the model two
+ways. The first will do a +1 and log of the DV and the second will use
+the proportion variable we created earlier. This might be a good time as
+well to flex with the `update()` function in R.
+
+``` r
+Data %>% mutate(ln_ler = log(ler + 1)) -> Data
+
+M2 <- update(M1, ln_ler ~ . , na.action=na.exclude)
+M3 <- update(M1, lerprop ~ . , .)
+```
+
+Briefly: this is just updating `M1` to change the two DVs. A dot (`.`)
+is a kind of placeholder in R to keep “as is.” You can read `~ . , .` as
+saying “regressed on the same stuff as before and keeping the other
+arguments we supplied to it before (like the data).” The first one has a
+little parlor trick, for which I’ll reveal its utility later. It adds
+`na.action=na.exclude` to the list of arguments passed to the model. For
+most real world data sets where you want R to ignore the missing data,
+but maintain the original dimensions of the data set, you’ll want to
+include this argument in the formula. This will concern the `wls()`
+function I’ll show you later.
+
+Now, let’s also flex our muscles with `modelsummary()` to see what these
+alternate estimations mean for the inferences we’d like to report.
+
+``` r
+modelsummary(list("LER" = M1, 
+                  "log(LER + 1)" = M2, 
+                  "LER Prop." = M3),
+             title = "Hi Mom!",
+             stars = TRUE,
+             align = c("lccc"),
+             )
+```
+
+<table style="width:78%;">
+<caption>Hi Mom!</caption>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>LER</th>
+<th>log(LER + 1)</th>
+<th>LER Prop.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>(Intercept)</td>
+<td>31.170</td>
+<td>0.352</td>
+<td>0.364***</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(62.237)</td>
+<td>(0.302)</td>
+<td>(0.076)</td>
+</tr>
+<tr class="odd">
+<td>xm_qudsest</td>
+<td>9.453</td>
+<td>0.245**</td>
+<td>0.075***</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(16.547)</td>
+<td>(0.080)</td>
+<td>(0.020)</td>
+</tr>
+<tr class="odd">
+<td>wbgdppc2011est</td>
+<td>-3.328</td>
+<td>0.083*</td>
+<td>0.022*</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(7.472)</td>
+<td>(0.036)</td>
+<td>(0.009)</td>
+</tr>
+<tr class="odd">
+<td>init</td>
+<td>-8.634</td>
+<td>0.120</td>
+<td>0.050</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(27.620)</td>
+<td>(0.134)</td>
+<td>(0.034)</td>
+</tr>
+<tr class="odd">
+<td>milex</td>
+<td>0.000***</td>
+<td>0.000***</td>
+<td>0.000</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>mindur</td>
+<td>-0.006</td>
+<td>0.000+</td>
+<td>0.000</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.022)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>cinc</td>
+<td>-142.038</td>
+<td>0.722</td>
+<td>0.233</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(200.469)</td>
+<td>(0.972)</td>
+<td>(0.245)</td>
+</tr>
+<tr class="odd">
+<td>Num.Obs.</td>
+<td>252</td>
+<td>252</td>
+<td>246</td>
+</tr>
+<tr class="even">
+<td>R2</td>
+<td>0.442</td>
+<td>0.239</td>
+<td>0.160</td>
+</tr>
+<tr class="odd">
+<td>R2 Adj.</td>
+<td>0.428</td>
+<td>0.220</td>
+<td>0.139</td>
+</tr>
+<tr class="even">
+<td>AIC</td>
+<td>3374.9</td>
+<td></td>
+<td>-7.8</td>
+</tr>
+<tr class="odd">
+<td>BIC</td>
+<td>3403.1</td>
+<td></td>
+<td>20.2</td>
+</tr>
+<tr class="even">
+<td>Log.Lik.</td>
+<td>-1679.454</td>
+<td></td>
+<td>11.907</td>
+</tr>
+<tr class="odd">
+<td>RMSE</td>
+<td>189.72</td>
+<td>0.92</td>
+<td>0.23</td>
+</tr>
+</tbody><tfoot>
+<tr class="even">
+<td colspan="4"><ul>
+<li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
+</ul></td>
+</tr>
+</tfoot>
+&#10;</table>
+
+The results here show that it’s not just a simple matter that “different
+DVs = different results”. Far from it. Different *reasoned* design
+decisions can be the matter of the different results you observe. Using
+more reasonable estimates of battlefield performance (either logged loss
+exchange ratio or its proportion form) results in models that make more
+sense with respect to the underlying phenomenon you should care to
+estimate. In our case, it’s the difference of saying whether there is an
+effect to note for democracy, GDP per capita, and duration in conflict.
+
+Still, we may want to unpack these models a bit more, much like we did
+above. Let’s focus on `M2` for pedagogy’s sake, even though there is
+more reason to believe the third model is the less offensive of the
+two.[^2] Let’s get our fitted-residual plot.
+
+``` r
+broom::augment(M2, data=Data) %>%
+  ggplot(.,aes(.fitted, .resid)) +
+  geom_point(pch = 21) +
+  geom_hline(yintercept = 0, linetype="dashed", color="red") +
+  geom_smooth(method = "loess")
+#> `geom_smooth()` using formula = 'y ~ x'
+```
+
+![](figs/lab-5/unnamed-chunk-15-1.png)<!-- -->
+
+It’s still not ideal. The fitted-residual plot is broadly useful for
+other things too, and it’s screaming out loud that I have a
+heteroskedasticity problem and some discrete clusters in the DV.
+However, it wants to imply some non-linearity as well.
 
 One limitation of the fitted-residual plot, however, is that it won’t
 tell you where exactly the issue might be. That’s why I wrote the
@@ -212,136 +539,159 @@ fit and the LOESS smoother. Do note this tells you nothing about binary
 IVs, but binary IVs aren’t the problem here.
 
 ``` r
-linloess_plot(M1, pch=21)
+linloess_plot(M2, pch=21)
 #> `geom_smooth()` using formula = 'y ~ x'
 #> `geom_smooth()` using formula = 'y ~ x'
 ```
 
-![](figs/lab-5/unnamed-chunk-9-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-16-1.png)<!-- -->
 
-{car} has this one for you, if you’d like. I’ll concede it works better
-than my function at the moment.
+`{car}` has this one for you, if you’d like. I’ll concede it works
+better than my function at the moment.
 
 ``` r
-car::residualPlots(M1)
+car::residualPlots(M2)
 ```
 
-![](figs/lab-5/unnamed-chunk-10-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-17-1.png)<!-- -->
 
-    #>            Test stat Pr(>|Test stat|)    
-    #> agea          2.5954        0.0095427 ** 
-    #> female        0.3704        0.7111441    
-    #> eduyrs       -3.4281        0.0006249 ***
-    #> uempla       -0.6858        0.4929313    
-    #> hinctnta      0.0584        0.9534036    
-    #> lrscale      -0.2296        0.8184699    
-    #> Tukey test    3.2353        0.0012149 ** 
+    #>                Test stat Pr(>|Test stat|)    
+    #> xm_qudsest        3.3532        0.0009258 ***
+    #> wbgdppc2011est    1.7566        0.0802457 .  
+    #> init              0.1241        0.9013501    
+    #> milex             2.7593        0.0062310 ** 
+    #> mindur            0.3153        0.7527727    
+    #> cinc              1.3051        0.1931042    
+    #> Tukey test        4.7625        1.912e-06 ***
     #> ---
     #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 The thing I like about this plot is that it can point to multiple
 problems, though it won’t point you in the direction of any potential
-interactions. No matter, here it shows any proxy for the education-level
-of the respondent in a developed European country like the United
-Kingdom is going to have two sources of weirdness. For one, very few
-respondents will have so few years of education indicating they are
-something like a primary school dropout. They exist, and they can be
-anyone in the native-born UK population for all I know, but they’re
-rare. Second, you’ll have some career students (överliggare, I believe
-you Swedes call them). They also exist, but they’re rare. Maybe you want
-to implement some kind of left- and right-truncation. Wonder what that
-might be here.
+interactions. No matter, here it points to several things that I may
+want to ask myself about the data. I’ll go in order I see them.
+
+1.  Does democracy need a square term? It seems like the most autocratic
+    and the most democratic perform better than those democracies “in
+    the middle”. There’s ample intuition behind this in the democratic
+    peace literature, which emphasizes there is a real difference
+    between a democracy like Sweden and a fledgling democratizing state
+    like mid-1990s Serbia. Intuitively, there is also a qualitative
+    difference between a durable autocracy like Iran now versus a
+    fledgling autocracy like Iran in the early 1980s. We might be seeing
+    that here.
+
+2.  The GDP per capita variable has some clusters. It’s already
+    log-transformed, so I’m disinclined to take a log of a log. It’s
+    technically benchmarked in 2011 USD, so there’s not an issue of
+    nominal or real dollars here. Some states are just poor? In our
+    data, I see a jump from 2.428 (Mecklenburg in the First Schleswig
+    War) to 5.815 (i.e. Ethiopia in the Second Italian-Ethiopian War). A
+    few things might be happening here, and it’s worth noting estimates
+    of GDP per capita in the 19th century are *always* tentative and
+    prone to some kind of measurement error. It might be ideal to
+    proportionalize (sic) these, much like we did with the LER variable.
+    However, that would require more information (on my end, behind the
+    scenes) than we have here. Perhaps we just make a poverty dummy here
+    and leave well enough alone, mostly to see if there is any
+    sensitivity to those observations. The line doesn’t look like it’s
+    affected.
+
+3.  It might make sense to log-transform military expenditures and
+    duration. We’d have to do a +1-and-log to expenditures because there
+    are states in war that don’t register in the thousands, per the
+    National Material Capabilities data.
+
+With that out of the way, let’s create some variables of interest to us
+and re-estimate Model 2.
 
 ``` r
-ESS9GB %>% count(eduyrs) %>% na.omit %>%
-  ggplot(.,aes(as.factor(eduyrs), n)) + geom_bar(stat='identity')
-```
+Data %>%
+  mutate(povdum = ifelse(wbgdppc2011est < 4, 1, 0),
+         ln_mindur = log(mindur),
+         ln_milex = log(milex + 1)) -> Data
 
-![](figs/lab-5/unnamed-chunk-11-1.png)<!-- -->
 
-Hmm. How about this: below 10: 10. Above 20: 20. We’ll truncate the data
-on the left and right end.
-
-``` r
-ESS9GB %>%
-  mutate(eduyrsrc = case_when(
-    # if it's 10 or below: 10
-    eduyrs <= 10 ~ 10,
-    # if it's 20 or above: 20
-    eduyrs >= 20 ~ 20,
-    # if it's anything else (i.e. in those bounds): keep it as is.
-    TRUE ~ eduyrs
-  )) -> ESS9GB
-```
-
-There’s also some interesting patterns about ideology too. It looks like
-those heap in the middle of this (11-point) scale of ideology are
-behaving differently than those who lean left or those who lean right.
-That might imply that the ideology variable might be better recoded as a
-categorical variable. In other words, something like this.
-
-``` r
-ESS9GB %>% 
-  mutate(ideocat = case_when(
-    lrscale < 5 ~ "Left",
-    lrscale == 5 ~ "Center",
-    lrscale > 5 ~ "Right"
-  )) %>%
-  mutate(ideocat = fct_relevel(ideocat, "Center")) -> ESS9GB
-```
-
-The solutions here are largely up to you. Let’s re-estimate the model
-with the following changes. We’ll include our truncated education
-variable, square the age variable, and introduce the ideology variable
-as a fixed effect (in lieu of the `lrscale` variable). Let’s see what
-that does.
-
-``` r
-M2 <- lm(immigsent ~ agea + I(agea^2) + female + eduyrsrc + 
-           uempla + hinctnta + ideocat, 
-         ESS9GB, na.action = na.exclude)
-summary(M2)
+M4 <- lm(log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + 
+           wbgdppc2011est + ln_milex + ln_mindur + cinc,
+         Data)
+summary(M4)
 #> 
 #> Call:
-#> lm(formula = immigsent ~ agea + I(agea^2) + female + eduyrsrc + 
-#>     uempla + hinctnta + ideocat, data = ESS9GB, na.action = na.exclude)
+#> lm(formula = log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + wbgdppc2011est + 
+#>     ln_milex + ln_mindur + cinc, data = Data)
 #> 
 #> Residuals:
-#>      Min       1Q   Median       3Q      Max 
-#> -20.3399  -3.8792   0.6662   4.6014  17.1040 
+#>     Min      1Q  Median      3Q     Max 
+#> -1.8790 -0.5625 -0.1934  0.3217  5.8821 
 #> 
 #> Coefficients:
-#>                Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept)   9.4675626  1.5915209   5.949 3.38e-09 ***
-#> agea         -0.1320220  0.0566580  -2.330   0.0199 *  
-#> I(agea^2)     0.0012239  0.0005317   2.302   0.0215 *  
-#> female       -0.0750439  0.3358441  -0.223   0.8232    
-#> eduyrsrc      0.5960518  0.0572118  10.418  < 2e-16 ***
-#> uempla       -1.0226944  1.1905698  -0.859   0.3905    
-#> hinctnta      0.3344254  0.0630226   5.306 1.29e-07 ***
-#> ideocatLeft   2.6748059  0.4034819   6.629 4.75e-11 ***
-#> ideocatRight -0.0055570  0.4153486  -0.013   0.9893    
+#>                  Estimate Std. Error t value Pr(>|t|)    
+#> (Intercept)      0.550520   0.383058   1.437  0.15194    
+#> xm_qudsest       0.253293   0.081828   3.095  0.00219 ** 
+#> I(xm_qudsest^2)  0.284855   0.071087   4.007 8.16e-05 ***
+#> wbgdppc2011est   0.076564   0.042133   1.817  0.07040 .  
+#> ln_milex        -0.007327   0.021925  -0.334  0.73854    
+#> ln_mindur       -0.047257   0.045252  -1.044  0.29737    
+#> cinc             1.874209   1.015472   1.846  0.06615 .  
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
-#> Residual standard error: 6.311 on 1445 degrees of freedom
-#>   (451 observations deleted due to missingness)
-#> Multiple R-squared:  0.1689, Adjusted R-squared:  0.1643 
-#> F-statistic: 36.72 on 8 and 1445 DF,  p-value: < 2.2e-16
+#> Residual standard error: 0.9609 on 245 degrees of freedom
+#>   (32 observations deleted due to missingness)
+#> Multiple R-squared:  0.1928, Adjusted R-squared:  0.173 
+#> F-statistic: 9.753 on 6 and 245 DF,  p-value: 1.232e-09
 ```
 
-From this changed model, we don’t see a discernible difference between
-the right and center, but we do see evidence of a curvilinear age
-effect. How else you choose to deal with this is up to you, but these
-diagnostics at least point to the problem and the discussion here at
-least suggests some potential fixes. Just be mindful that any polynomial
-effects you include in a model have to be justified by you, the one
-doing the higher-order polynomials. Always be prepared to explain
-anything you’re doing.
+I don’t think it’s going to be an issue, but now I’m curious…
+
+``` r
+summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
+#> 
+#> Call:
+#> lm(formula = log(ler + 1) ~ xm_qudsest + wbgdppc2011est + ln_milex + 
+#>     ln_mindur + cinc, data = subset(Data, povdum == 1))
+#> 
+#> Residuals:
+#>      Min       1Q   Median       3Q      Max 
+#> -0.30447 -0.12641 -0.03361  0.11062  0.34382 
+#> 
+#> Coefficients:
+#>                Estimate Std. Error t value Pr(>|t|)  
+#> (Intercept)     -3.7055     1.9102  -1.940   0.0843 .
+#> xm_qudsest      -0.3168     0.1770  -1.789   0.1072  
+#> wbgdppc2011est   0.3990     0.3716   1.074   0.3109  
+#> ln_milex         0.5037     0.2388   2.109   0.0642 .
+#> ln_mindur        0.1930     0.1080   1.787   0.1076  
+#> cinc           -70.9074    26.3614  -2.690   0.0248 *
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> Residual standard error: 0.2332 on 9 degrees of freedom
+#>   (3 observations deleted due to missingness)
+#> Multiple R-squared:  0.628,  Adjusted R-squared:  0.4213 
+#> F-statistic: 3.038 on 5 and 9 DF,  p-value: 0.07031
+```
+
+We don’t have a lot of observations to play with here, and the
+observations affected here are decidedly unrepresentative of the overall
+population of cases. I wouldn’t sweat this issue, other than perhaps as
+a call to restrict any serious analysis to just the 20th century when we
+developed better capacity for calculating estimates of economic size and
+wealth. All the observations affected here are in the 19th century and,
+wouldn’t you know it, all concern the wars of Italian/German
+unification.
+
+You’re welcome to play more with the diagnostics of these models, though
+it comes with the caveat that you’re making linear assumptions anyway
+when you estimate this model. Don’t go chasing waterfalls, only the
+rivers and the lakes to which you are used… to. I know you’re going to
+have it your way or (more than likely) use no statistical model at all.
+Let’s just not move too fast.[^3]
 
 ## Independence
 
-The OLS model assumes the independence of the model’s errors and that
+The linear model assumes the independence of the model’s errors and that
 any pair of errors are going to be uncorrelated with each other. Past
 observations (and past errors) should not inform other pairs of errors.
 In formal terms, this assumption seems kind of Greek to students. In
@@ -382,83 +732,239 @@ former. The Durbin-Watson test has some pretty strong assumptions and
 only looks for a order-1 autocorrelation. No matter, it has some
 informational value when you get deeper into the weeks of time series
 stuff. Both can be estimated by way of the `{lmtest}` package. Let’s go
-back to our first model and apply both.
+back to our model and apply both.
 
 ``` r
-dwtest(M1)
+dwtest(M2)
 #> 
 #>  Durbin-Watson test
 #> 
-#> data:  M1
-#> DW = 1.9486, p-value = 0.163
+#> data:  M2
+#> DW = 1.7386, p-value = 0.01523
 #> alternative hypothesis: true autocorrelation is greater than 0
-bgtest(M1)
+bgtest(M2)
 #> 
 #>  Breusch-Godfrey test for serial correlation of order up to 1
 #> 
-#> data:  M1
-#> LM test = 0.90782, df = 1, p-value = 0.3407
+#> data:  M2
+#> LM test = 2.3983, df = 1, p-value = 0.1215
 ```
 
 The “null” hypothesis of both tests is “no autocorrelation.” The
 alternative hypothesis is “autocorrelation.” When the *p*-value is
-sufficiently small, it indicates a problem. Here, they suggest no real
-problem and no further fix is needed. That is not terribly surprising in
-this case, as the data are a random sample from the population and done
-in a mostly time-invariant way. If there was a serial/spatial
-correlation to fix, consider some kind of region fixed effects in this
-case. It’d be something like this.
+sufficiently small, it indicates a problem. Here, they seem to suggest
+some kind of autocorrelation, though the data aren’t exactly a panel or
+a time series. Understand, again, these tests are making particular
+assumptions about your data that we don’t quite have, and that you
+should learn to anticipate these issues without needing a textbook test
+to do it for you. I don’t have the time or opportunity to belabor these
+issues in detail, but:
+
+1.  When you read quant stuff in IR, especially the kind of stuff you
+    might see my name attached to or people I otherwise know, you’ll see
+    so-called “clustered” standard errors that are often “spatial” or
+    cross-sectional in scope. For example, there is good reason to
+    believe the American observations in this model are related to each
+    other. British observations should be related to other British
+    observations, and so on.
+
+2.  Much like you’d see in a panel model, you might also see so-called
+    “fixed effects” applied here. This might take on multiple forms. If
+    I had any reason to believe whatsoever that conflicts within
+    particular regions are different from each other, I could create a
+    series of dummies that say “is this war in Europe or not” or “is
+    this in Sub-Saharan Africa or not?” Or, perhaps, I have reason to
+    believe there is a clustering of observation by era or moment in
+    time. The world war eras are different from the Cold War eras, and
+    so on.
+
+I can create these ad hoc with the information available in the data I
+have. The `stdate` column has the start of the first event by the
+participant in war. I can extract that with `str_sub()` (getting the
+last four digits), and convert that to a numeric integer for year. Then,
+I can use a `case_when()` call to categorize whether the observation was
+before World War I, between and involving both world wars, during the
+Cold War, or after the Cold War.
 
 ``` r
-M3 <- update(M1, ~. + factor(region)) 
-# ^ update M1, keep everything as is, add region fixed effects
-summary(M3)
-#> 
-#> Call:
-#> lm(formula = immigsent ~ agea + female + eduyrs + uempla + hinctnta + 
-#>     lrscale + factor(region), data = ESS9GB, na.action = na.exclude)
-#> 
-#> Residuals:
-#>      Min       1Q   Median       3Q      Max 
-#> -20.8870  -3.7189   0.6907   4.5214  16.4952 
-#> 
-#> Coefficients:
-#>                                        Estimate Std. Error t value Pr(>|t|)    
-#> (Intercept)                            11.59296    1.20152   9.649  < 2e-16 ***
-#> agea                                   -0.00296    0.01016  -0.291   0.7708    
-#> female                                 -0.19460    0.33542  -0.580   0.5619    
-#> eduyrs                                  0.47774    0.04884   9.782  < 2e-16 ***
-#> uempla                                 -0.95502    1.19492  -0.799   0.4243    
-#> hinctnta                                0.31474    0.06174   5.098 3.89e-07 ***
-#> lrscale                                -0.58534    0.08792  -6.658 3.95e-11 ***
-#> factor(region)East of England           0.91292    0.79241   1.152   0.2495    
-#> factor(region)London                    0.66388    0.93409   0.711   0.4774    
-#> factor(region)North East (England)     -1.72860    0.91451  -1.890   0.0589 .  
-#> factor(region)North West (England)     -0.02655    0.78661  -0.034   0.9731    
-#> factor(region)Northern Ireland          1.30212    1.10180   1.182   0.2375    
-#> factor(region)Scotland                  2.04198    0.82419   2.478   0.0133 *  
-#> factor(region)South East (England)      1.13603    0.74895   1.517   0.1295    
-#> factor(region)South West (England)      0.93027    0.80640   1.154   0.2489    
-#> factor(region)Wales                    -1.03543    0.99713  -1.038   0.2993    
-#> factor(region)West Midlands (England)  -1.34344    0.90135  -1.490   0.1363    
-#> factor(region)Yorkshire and the Humber -0.20694    0.80913  -0.256   0.7982    
-#> ---
-#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> 
-#> Residual standard error: 6.325 on 1436 degrees of freedom
-#>   (451 observations deleted due to missingness)
-#> Multiple R-squared:  0.1703, Adjusted R-squared:  0.1605 
-#> F-statistic: 17.34 on 17 and 1436 DF,  p-value: < 2.2e-16
+Data %>%
+  mutate(year = str_sub(stdate, -4, -1)) %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(period = case_when(
+    year <= 1913 ~ "Pre-WW1",
+    between(year, 1914, 1945) ~ "WW1 and WW2 Era",
+    between(year, 1946, 1990) ~ "Cold War",
+    year >= 1991 ~ "Post-Cold War"
+  )) %>%
+  mutate(period = fct_relevel(period, "Pre-WW1", "WW1 and WW2 Era",
+                              "Cold War")) -> Data
+
+M5 <- update(M2, . ~ . + period, Data)
+modelsummary(list("log(LER + 1)" = M2, 
+                  "w/ Period FE" = M5),
+             stars = TRUE,
+             title = "Hi Mom!",
+)
 ```
 
-Do note fixed effects in this application have a tendency to “demean”
-other things in the model, though they’re not telling you much here.
-Indeed, you didn’t have much of a problem.
+<table style="width:75%;">
+<caption>Hi Mom!</caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>log(LER + 1)</th>
+<th>w/ Period FE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>(Intercept)</td>
+<td>0.352</td>
+<td>0.321</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.302)</td>
+<td>(0.298)</td>
+</tr>
+<tr class="odd">
+<td>xm_qudsest</td>
+<td>0.245**</td>
+<td>0.251**</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.080)</td>
+<td>(0.080)</td>
+</tr>
+<tr class="odd">
+<td>wbgdppc2011est</td>
+<td>0.083*</td>
+<td>0.109**</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.036)</td>
+<td>(0.038)</td>
+</tr>
+<tr class="odd">
+<td>init</td>
+<td>0.120</td>
+<td>0.130</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.134)</td>
+<td>(0.132)</td>
+</tr>
+<tr class="odd">
+<td>milex</td>
+<td>0.000***</td>
+<td>0.000***</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>mindur</td>
+<td>0.000+</td>
+<td>0.000</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>cinc</td>
+<td>0.722</td>
+<td>0.761</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.972)</td>
+<td>(1.033)</td>
+</tr>
+<tr class="odd">
+<td>periodWW1 and WW2 Era</td>
+<td></td>
+<td>-0.526**</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>(0.165)</td>
+</tr>
+<tr class="odd">
+<td>periodCold War</td>
+<td></td>
+<td>-0.300+</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>(0.165)</td>
+</tr>
+<tr class="odd">
+<td>periodPost-Cold War</td>
+<td></td>
+<td>-0.070</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>(0.232)</td>
+</tr>
+<tr class="odd">
+<td>Num.Obs.</td>
+<td>252</td>
+<td>252</td>
+</tr>
+<tr class="even">
+<td>R2</td>
+<td>0.239</td>
+<td>0.274</td>
+</tr>
+<tr class="odd">
+<td>R2 Adj.</td>
+<td>0.220</td>
+<td>0.247</td>
+</tr>
+<tr class="even">
+<td>RMSE</td>
+<td>0.92</td>
+<td>0.90</td>
+</tr>
+</tbody><tfoot>
+<tr class="odd">
+<td colspan="3"><ul>
+<li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
+</ul></td>
+</tr>
+</tfoot>
+&#10;</table>
 
-No matter, if you have autocorrelation, you have to tackle it outright
-or your OLS model has no inferential value. The exact fix depends on the
-exact nature of the problem, which will definitely depend on you knowing
-your data well and what you’re trying to accomplish.
+
+Do note fixed effects in this application have a tendency to “demean”
+other things in the model, and they have a slightly different
+interpretation. For example, though both are “significant” and “look the
+same”, the GDP per capita effect is now understood as the effect of
+*increasing* GDP per capita *within periods* rather than higher *levels*
+of GDP per capita, per se. You do observe some period weirdness.
+Compared to the pre-WWI era, logged LER is generally lower in the
+interwar years and generally lower in the Cold War, importantly
+partialing out the other information in the model. No matter, if you
+have autocorrelation, you have to tackle it outright or your OLS model
+has no inferential value. The exact fix depends on the exact nature of
+the problem, which will definitely depend on you knowing your data well
+and what you’re trying to accomplish.
 
 ## Normality (of the Errors)
 
@@ -497,18 +1003,18 @@ communicating the same thing. You can explore a few of these in the
 `{nortest}` package.
 
 ``` r
-shapiro.test(resid(M1))
+shapiro.test(resid(M2))
 #> 
 #>  Shapiro-Wilk normality test
 #> 
-#> data:  resid(M1)
-#> W = 0.98373, p-value = 9.782e-12
-ks.test(resid(M1), y=pnorm)
+#> data:  resid(M2)
+#> W = 0.90417, p-value = 1.349e-11
+ks.test(resid(M2), y=pnorm)
 #> 
 #>  One-sample Kolmogorov-Smirnov test
 #> 
-#> data:  resid(M1)
-#> D = 0.3919, p-value < 2.2e-16
+#> data:  resid(M2)
+#> D = 0.14934, p-value = 2.626e-05
 #> alternative hypothesis: two-sided
 ```
 
@@ -532,7 +1038,7 @@ shapiro.test(lambdas <- rpois(1000, 100))
 
 I should not have passed this test, and yet I did. These aren’t normally
 distributed. They’re Poisson-distributed, and can’t be reals. Second,
-thse normality tests are deceptively just a test of sample size. The
+these normality tests are deceptively just a test of sample size. The
 more observations you have, the more sensitive the test is to any
 observation in the distribution that looks anomalous. Three, textbooks
 typically say to use the K-S test if you have a large enough sample
@@ -545,65 +1051,49 @@ is actually a default plot in base R for linear models if you know where
 to look.
 
 ``` r
-plot(M1, which=2)
+plot(M2, which=2)
 ```
 
-![](figs/lab-5/unnamed-chunk-19-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-24-1.png)<!-- -->
 
 The Q-Q plots the theoretical quantiles of the residuals against the
 standardized residuals. Ideally, they all fall on a nice line. Here,
 they don’t, suggesting a problem. The negative residuals are more
-negative than expected and the positive residuals are more positive than
-expected.
+negative than expected at the tail end of the distribution (which is
+almost always unavoidable for real-world data at the tails) but the
+higher residuals are more positive than expect for the higher quantiles.
+This one is more problematic. You could’ve anticipated this knowing that
+there is still a right skew in the DV even after its logarithmic
+transformation.
 
 I mentioned in lecture that a better way of gauging just how severe the
 issue is will involve generating a density plot of the residuals against
 a stylized density plot matching the description of the residuals
 (i.e. with a mean of 0 and a standard deviation equal to the standard
-deviation of the residuals). It would look something like this.
+deviation of the residuals). It would look something like this for `M2`.
 
 ``` r
-ESS9GB %>%
-  ggplot(.,aes(.resid)) +
-  geom_density(size = 1.1) +
-  stat_function(fun = dnorm, color="blue",
-                args = list(mean = 0, 
-                            sd = sd(ESS9GB$.resid, na.rm=T)),
-                linetype="dashed", size=1.1) 
+rd_plot(M2)
 ```
 
-![](figs/lab-5/unnamed-chunk-20-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-25-1.png)<!-- -->
 
-Btw, `rd_plot()` in `{stevemisc}` will do this for you. Here’s what it’s
-doing.
+Or this for `M3`:
 
 ``` r
-rd_plot <- function(mod) {
-  
-  sdr <- sd(resid(mod), na.rm=T)
-  
-  hold_this <- data.frame(x = resid(mod))
-  
-  ggplot(hold_this, aes(x)) +
-    geom_density() +
-    stat_function(fun = dnorm, color="blue",
-                  args = list(mean = 0, sd = sdr),
-                  linetype="dashed", linewidth=1.1)
-  
-}
-
-rd_plot(M1)
+rd_plot(M3)
 ```
 
-![](figs/lab-5/unnamed-chunk-21-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-26-1.png)<!-- -->
 
-In this plot, the black solid line is a density plot of the actual
+In these plots, the black solid line is a density plot of the actual
 residuals whereas the blue, dashed line is a density plot of a normal
 distribution with a mean of 0 and a standard deviation equal to the
 standard deviation of the residuals. The real thing will always be kind
 of lumpy in some ways when you’re using actual data. Ask yourself how
-bad it is. I’d argue that the distribution is not ideal though the
-normality of the residuals is reasonably approximated.
+bad it is. I’d argue that the distribution is not acceptable in the case
+of `M2`, though reasonably approximated in `M3`. Both results are fairly
+similar to each other in the stuff we care about.
 
 Your solution to this particular “problem” will depend on what exactly
 you’re doing in the first place. The instances in which these plots look
@@ -661,15 +1151,15 @@ problem in your OLS model. The first is the fitted-residual plot. You
 can ask for that again. This time, have your eye draw kind of an upper
 bound and lower bound on the *y*-axis (for the residuals). Are those
 lines flat/pattern-less? Tell-tale cases of heteroskedasticity like we
-discussed in lecture are cases where you have a cone pattern emerge. It
-may not be as obvious as it was in that case, but you might be able to
-tease out some kind of non-constant pattern.
+discussed in lecture are cases where you have a cone pattern emerge.
+Sometimes it’s not as obviously cone-shaped. This one is 100%
+cone-shaped.
 
 ``` r
-plot(M1, which=1)
+plot(M2, which=1)
 ```
 
-![](figs/lab-5/unnamed-chunk-22-1.png)<!-- -->
+![](figs/lab-5/unnamed-chunk-27-1.png)<!-- -->
 
 I think I see a pattern, and certainly the pattern of residuals don’t
 look like random buckshot like I’d want. Fortunately, there’s an actual
@@ -679,12 +1169,12 @@ The alternate hypothesis is heteroskedasticity. If the *p*-value is
 sufficiently small, you have a problem.
 
 ``` r
-bptest(M1)
+bptest(M2)
 #> 
 #>  studentized Breusch-Pagan test
 #> 
-#> data:  M1
-#> BP = 26.601, df = 6, p-value = 0.000172
+#> data:  M2
+#> BP = 49.163, df = 6, p-value = 6.918e-09
 ```
 
 Looks like we have a problem, but what’s the solution? Unfortunately,
@@ -710,136 +1200,118 @@ to explore.
 The basic “textbook” approach is weighted least squares. I mentioned in
 lecture that this approach is kind of convoluted. It’s not complicated.
 It’s just convoluted. The procedure here starts with running the
-offending model (which we already did; it’s `M1`). Then, grab the
+offending model (which we already did; it’s `M2`). Then, grab the
 residuals and fitted values from the model. Next, regress the absolute
 value of the residuals on the fitted values of the original model.
 Afterward, extract those fitted values, square them and divide 1 over
 those values. Finally, apply those as weights in the linear model once
 more for a re-estimation.
 
-It’s not a lot of work. It’s tedious, but it’s not a lot of work. Note
-that we already extracted the fitted values and residuals from `M1` and
-added them to the `ESS9GB` data frame. Let’s [draw the
-owl](https://knowyourmeme.com/memes/how-to-draw-an-owl) now. Here’s
-where I’ll reiterate that if your base data have missing values that you
-want to ignore, it’s good practice to specify the `na.action=na.exclude`
-argument so that fitted values and residuals from the model will
-maintain the original dimensions of the data.
+An older version of this script showed you how you can do it yourself.
+Just have `{stevemisc}` do it for you with the `wls()` function.
 
 ``` r
-M4 <- lm(abs(.resid) ~ .fitted, data=ESS9GB,
-         na.action = na.exclude)
-
-ESS9GB %>%
-  mutate(wts = 1/(fitted(M4)^2)) -> ESS9GB
-
-M5 <- update(M1,  ~., 
-             weights = wts)
-
-# summary(M5)
-# ^ This would be if you wanted to look at the model you just ran
-
-# Instead, let's format it into a nice table.
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5),
+modelsummary(list("log(LER)" = M2,
+                  "WLS" = wls(M2)),
              stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
+             title = "A Caption for This Table. Hi Mom!",
              gof_map = c("nobs", "adj.r.squared"))
 ```
 
-<table style="width:53%;">
+<table style="width:54%;">
+<caption>A Caption for This Table. Hi Mom!</caption>
 <colgroup>
-<col style="width: 19%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
+<col style="width: 23%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th></th>
-<th>OLS</th>
+<th>log(LER)</th>
 <th>WLS</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>(Intercept)</td>
-<td>11.655***</td>
-<td>12.148***</td>
+<td>0.352</td>
+<td>0.386**</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(1.061)</td>
-<td>(1.041)</td>
+<td>(0.302)</td>
+<td>(0.139)</td>
 </tr>
 <tr class="odd">
-<td>agea</td>
-<td>-0.002</td>
-<td>-0.003</td>
+<td>xm_qudsest</td>
+<td>0.245**</td>
+<td>0.103</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.010)</td>
-<td>(0.010)</td>
+<td>(0.080)</td>
+<td>(0.065)</td>
 </tr>
 <tr class="odd">
-<td>female</td>
-<td>-0.248</td>
-<td>-0.242</td>
+<td>wbgdppc2011est</td>
+<td>0.083*</td>
+<td>0.068***</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.338)</td>
-<td>(0.336)</td>
+<td>(0.036)</td>
+<td>(0.018)</td>
 </tr>
 <tr class="odd">
-<td>eduyrs</td>
-<td>0.488***</td>
-<td>0.468***</td>
+<td>init</td>
+<td>0.120</td>
+<td>0.182+</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.049)</td>
-<td>(0.046)</td>
+<td>(0.134)</td>
+<td>(0.093)</td>
 </tr>
 <tr class="odd">
-<td>uempla</td>
-<td>-1.102</td>
-<td>-1.082</td>
+<td>milex</td>
+<td>0.000***</td>
+<td>0.000</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(1.204)</td>
-<td>(1.246)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
 </tr>
 <tr class="odd">
-<td>hinctnta</td>
-<td>0.338***</td>
-<td>0.370***</td>
+<td>mindur</td>
+<td>0.000+</td>
+<td>0.000</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.061)</td>
-<td>(0.061)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
 </tr>
 <tr class="odd">
-<td>lrscale</td>
-<td>-0.583***</td>
-<td>-0.643***</td>
+<td>cinc</td>
+<td>0.722</td>
+<td>0.883</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.088)</td>
-<td>(0.088)</td>
+<td>(0.972)</td>
+<td>(0.919)</td>
 </tr>
 <tr class="odd">
 <td>Num.Obs.</td>
-<td>1454</td>
-<td>1454</td>
+<td>252</td>
+<td>252</td>
 </tr>
 <tr class="even">
 <td>R2 Adj.</td>
-<td>0.145</td>
-<td>0.156</td>
+<td>0.220</td>
+<td>0.117</td>
 </tr>
 </tbody><tfoot>
 <tr class="odd">
@@ -850,335 +1322,88 @@ modelsummary(list("OLS" = M1,
 </tfoot>
 &#10;</table>
 
-Btw, `{stevemisc}` can do this for you.
+Re-estimating the model by way of weighted least squares reveals some
+interesting changes, leaving open the possibility that any inference
+we’d like to report for the democracy variable, the initiator variable,
+the military expenditure variable, and the duration variable are
+functions of the heteroskedasticity and whether we dealt with it in the
+“textbook” way.
+
+There is an entire branch of econometrics that deals with what to do
+about your test statistics if you have this problem, and they all seem
+to have a unifying aversion to the weighted least squares approach.
+Their point of contention is typically that if the implications of
+heteroskedasticity is the line is fine but the standard errors are
+wrong, then the “fix” offered by a textbook is almost guaranteed to
+redraw lines. They instead offer a battery of methods to recalibrate
+standard errors based on information from the variance-covariance matrix
+to adjust for this. This would make the standard errors “robust.”
+
+I mention above that I have an entire blog post that discusses some of
+these things in more detail than I will offer here. It’s a lament that
+it’s never just “do this and you’re done” thing; it’s always “fuck
+around and see what you find” thing. However, the “classic” standard
+error corrections are so-called “Huber-White” standard errors and are
+often known by the acronym “HC0”. The suggest defaults you often see in
+software for “robust” standard errors are type “HC3”, based on this
+offering from [Mackinnon and White
+(1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
+
+Alternatively, if I were you, I’d bootstrap this bad boy. You likewise
+have several options here, and I maintain it’s fun/advisable to do the
+bootstrap yourself rather than have some software bundle do it for you,
+and I have guides on previous course websites and on my blog that show
+you how to do this. Your have myriad options, but I’ll focus on just
+two. The first, the simple bootstrap pionereed by Bradley Efron,
+resamples *with replacement* from the data and re-runs the model some
+number of times. In expectation, the mean coefficients of these
+re-estimated models converge on what it is in the offending model (which
+you would know from central limit theorem). However, the *standard
+deviation of the coefficients is your bootstrapped standard error*.
+Another popular approach is a bootstrapped model from the residuals.
+Sometimes called a “Bayesian” or “fractional” bootstrap, this approach
+had its hot girl summer on Twitter two or three years ago and leaves the
+regressors at their fixed values and resamples the residuals and adds
+them to the response variable.
+
+If you wanted to do any one of these in isolation, you’d want to
+leverage the `coeftest()` function in `{lmtest}` with the assorted
+mechanisms for futzing with the variance-covariance matrix (or other
+parts of the model) in the `{sandwich}` package. For example, what
+follows below is going to do the simple bootstrap 1,000 times on `M2`.
+You can set a reproducible seed with the `set.seed()` function for max
+reproducibility, if you’d like.
 
 ``` r
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "Auto WLS" = wls(M1)),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
-             gof_map = c("nobs", "adj.r.squared"))
-```
-
-<table style="width:69%;">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th>OLS</th>
-<th>WLS</th>
-<th>Auto WLS</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>(Intercept)</td>
-<td>11.655***</td>
-<td>12.148***</td>
-<td>12.148***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.061)</td>
-<td>(1.041)</td>
-<td>(1.041)</td>
-</tr>
-<tr class="odd">
-<td>agea</td>
-<td>-0.002</td>
-<td>-0.003</td>
-<td>-0.003</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-</tr>
-<tr class="odd">
-<td>female</td>
-<td>-0.248</td>
-<td>-0.242</td>
-<td>-0.242</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.338)</td>
-<td>(0.336)</td>
-<td>(0.336)</td>
-</tr>
-<tr class="odd">
-<td>eduyrs</td>
-<td>0.488***</td>
-<td>0.468***</td>
-<td>0.468***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.049)</td>
-<td>(0.046)</td>
-<td>(0.046)</td>
-</tr>
-<tr class="odd">
-<td>uempla</td>
-<td>-1.102</td>
-<td>-1.082</td>
-<td>-1.082</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.204)</td>
-<td>(1.246)</td>
-<td>(1.246)</td>
-</tr>
-<tr class="odd">
-<td>hinctnta</td>
-<td>0.338***</td>
-<td>0.370***</td>
-<td>0.370***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.061)</td>
-<td>(0.061)</td>
-<td>(0.061)</td>
-</tr>
-<tr class="odd">
-<td>lrscale</td>
-<td>-0.583***</td>
-<td>-0.643***</td>
-<td>-0.643***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.088)</td>
-<td>(0.088)</td>
-<td>(0.088)</td>
-</tr>
-<tr class="odd">
-<td>Num.Obs.</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
-</tr>
-<tr class="even">
-<td>R2 Adj.</td>
-<td>0.145</td>
-<td>0.156</td>
-<td>0.156</td>
-</tr>
-</tbody><tfoot>
-<tr class="odd">
-<td colspan="4"><ul>
-<li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
-</ul></td>
-</tr>
-</tfoot>
-&#10;</table>
-
-Re-estimating the model by way of weighted least squares reveals no real
-changes. Some parameters moved around a little bit, but everything is
-basically within a standard error of each other.
-
-Another approach is to do what is (informally) called on an “on-the-fly”
-standard error correction. In these cases, the point estimates from the
-original model remain the same, but adjustments are made to the standard
-errors based on the model’s variance-covariance matrix. There are any
-numbers of ways of doing this—and, again, ad hoc standard error
-corrections are multiple and depend on what exactly you’re trying to
-accomplish (or think you’re accomplishing). If you’re interested in this
-stuff, you should download the `{sandwich}` package and explore your
-options in there. For now, let’s use the `{fixest}` package and have
-this do our work for us.
-
-``` r
-M6 <- feols(immigsent ~  agea + female + eduyrs + uempla + hinctnta + lrscale,
-            data = ESS9GB, se = "hetero")
-#> NOTE: 451 observations removed because of NA values (LHS: 55, RHS: 427).
-
-# summary(M6)
-# ^ If you wanted to look at what you just estimated.
-```
-
-Let’s see what happens.
-
-``` r
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "HRSE" = M6),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
-             gof_map = c("nobs", "adj.r.squared"))
-```
-
-<table style="width:69%;">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th>OLS</th>
-<th>WLS</th>
-<th>HRSE</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>(Intercept)</td>
-<td>11.655***</td>
-<td>12.148***</td>
-<td>11.655***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.061)</td>
-<td>(1.041)</td>
-<td>(1.183)</td>
-</tr>
-<tr class="odd">
-<td>agea</td>
-<td>-0.002</td>
-<td>-0.003</td>
-<td>-0.002</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-</tr>
-<tr class="odd">
-<td>female</td>
-<td>-0.248</td>
-<td>-0.242</td>
-<td>-0.248</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.338)</td>
-<td>(0.336)</td>
-<td>(0.337)</td>
-</tr>
-<tr class="odd">
-<td>eduyrs</td>
-<td>0.488***</td>
-<td>0.468***</td>
-<td>0.488***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.049)</td>
-<td>(0.046)</td>
-<td>(0.059)</td>
-</tr>
-<tr class="odd">
-<td>uempla</td>
-<td>-1.102</td>
-<td>-1.082</td>
-<td>-1.102</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.204)</td>
-<td>(1.246)</td>
-<td>(1.343)</td>
-</tr>
-<tr class="odd">
-<td>hinctnta</td>
-<td>0.338***</td>
-<td>0.370***</td>
-<td>0.338***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.061)</td>
-<td>(0.061)</td>
-<td>(0.064)</td>
-</tr>
-<tr class="odd">
-<td>lrscale</td>
-<td>-0.583***</td>
-<td>-0.643***</td>
-<td>-0.583***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.088)</td>
-<td>(0.088)</td>
-<td>(0.099)</td>
-</tr>
-<tr class="odd">
-<td>Num.Obs.</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
-</tr>
-<tr class="even">
-<td>R2 Adj.</td>
-<td>0.145</td>
-<td>0.156</td>
-<td>0.145</td>
-</tr>
-</tbody><tfoot>
-<tr class="odd">
-<td colspan="4"><ul>
-<li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
-</ul></td>
-</tr>
-</tfoot>
-&#10;</table>
-
-Not much is changing, though it’s not lost on me that the standard
-errors that are moving the most are the ones we identified as
-potentially problematic in the lin-loess plot we ran earlier into this
-script.
-
-Finally, one other alternative estimation approach is the bootstrap. To
-be clear, there’s no single bootstrap. There are multiple bootstraps.
-This particular bootstrap is the simple bootstrap where the original
-data set is randomly sampled, with replacement, *M* times to create *M*
-replicates of the original data set with the same number of rows as the
-original data. The model is then re-estimated *M* times on each of these
-replicates. The model parameters returned are the mean of the
-coefficients and the bootstrapped standard error is equal to the
-standard deviation of the coefficients/estimates. In other words, the
-simple bootstrap is mimicking a sampling distribution, which was the
-design of Bradley Efron (the guy that pioneered this procedure).
-
-Here’s how you’d do that. Using the `{modelr}` package and its
-`bootstrap()` function, we’ll create 1,000 replicates of the original
-data. These are special tibble-lists, that are called `strap` in the
-ensuing data frame. Then, using the `map()` function in `{purrr}`, which
-comes by way of the `{tidyverse}`, we’re going to re-run `M1` on each of
-these replicates/resamples as another column and then “tidy” the
-results. Then, we’re going to extract them with the `unnest()` function.
-The reproducible seed will ensure you and I get the same results from
-the bootstrap resample procedure. I have [a blog post that explains this
-in greater
-detail](http://svmiller.com/blog/2020/03/bootstrap-standard-errors-in-r/).
-
-``` r
-set.seed(8675309)
-# Starting with the original data used in M1.
-model.frame(M1) %>%
-  # draw 1000 bootstrap resamples
-  modelr::bootstrap(n = 1000) %>%
-  # estimate the model 1000 times
-  mutate(results = map(strap, ~ update(M1, data = .))) %>%
-  # extract results using `broom::tidy`
-  mutate(results = map(results, tidy)) %>%
-  # unnest and summarize
-  unnest(results) -> bootM1
+# set.seed(8675309)
+coeftest(M2, vcov = sandwich::vcovBS(M2, R = 1000))
+#> 
+#> t test of coefficients:
+#> 
+#>                   Estimate  Std. Error t value Pr(>|t|)   
+#> (Intercept)     3.5205e-01  2.1451e-01  1.6412 0.102032   
+#> xm_qudsest      2.4458e-01  9.3876e-02  2.6054 0.009739 **
+#> wbgdppc2011est  8.3176e-02  3.0340e-02  2.7415 0.006567 **
+#> init            1.2043e-01  1.0884e-01  1.1065 0.269591   
+#> milex           1.1194e-08  7.6893e-09  1.4558 0.146728   
+#> mindur         -1.8977e-04  8.9598e-05 -2.1181 0.035177 * 
+#> cinc            7.2242e-01  1.1215e+00  0.6442 0.520079   
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+coeftest(M2) # compare to what M2 actually is.
+#> 
+#> t test of coefficients:
+#> 
+#>                   Estimate  Std. Error t value  Pr(>|t|)    
+#> (Intercept)     3.5205e-01  3.0177e-01  1.1666  0.244487    
+#> xm_qudsest      2.4458e-01  8.0232e-02  3.0484  0.002553 ** 
+#> wbgdppc2011est  8.3176e-02  3.6230e-02  2.2958  0.022533 *  
+#> init            1.2043e-01  1.3392e-01  0.8993  0.369378    
+#> milex           1.1194e-08  2.1784e-09  5.1387 5.652e-07 ***
+#> mindur         -1.8977e-04  1.0863e-04 -1.7470  0.081893 .  
+#> cinc            7.2242e-01  9.7200e-01  0.7432  0.458055    
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 Take a moment to appreciate that you just ran 1,000 regressions on a
@@ -1186,391 +1411,229 @@ Take a moment to appreciate that you just ran 1,000 regressions on a
 would’ve taken a weekend at a supercomputer at some American university
 with a billion dollar endowment. Neat, huh?
 
-Moving on, I want to reiterate that the bootstrapped regression summary
-is the mean of the estimates and the standard deviation of the
-estimates. I’d be something like this.
+Anywho, the results of the simple bootstrap suggest a precise effect of
+military expenditures that would not be discerned in the model with
+heteroskedastic standard errors. The other significant coefficients are
+still significant, but less precise.
+
+\#’ FYI, `{modelsummary}` appears to be able to do this as well. In this
+function, notice that the “Bootstrap” model is just `M1`. We are using
+the `vcov` argument here to bootstrap for us. This should work provided
+you have `{sandwich}` installed.
 
 ``` r
-bootM1 %>%
-  group_by(term)  %>%
-  summarize(std.error = sd(estimate),
-            estimate = mean(estimate)) %>%
-    select(term, estimate, `std.error`)
-#> # A tibble: 7 × 3
-#>   term        estimate std.error
-#>   <chr>          <dbl>     <dbl>
-#> 1 (Intercept) 11.6       1.16   
-#> 2 agea        -0.00212   0.00992
-#> 3 eduyrs       0.492     0.0584 
-#> 4 female      -0.269     0.327  
-#> 5 hinctnta     0.333     0.0648 
-#> 6 lrscale     -0.580     0.0998 
-#> 7 uempla      -1.15      1.35
+modelsummary(list("log(LER)" = M2,
+                  "WLS" = wls(M2),
+                  "HC0" = M2,
+                  "HC3" = M2,
+                  "Bootstrap" = M2,
+                  "Resid. Boot." = M2),
+             vcov = list(vcovHC(M2,type='const'),
+                         vcovHC(wls(M2)),
+                         vcovHC(M2,type='HC0'),
+                         vcovHC(M2, type='HC3'),
+                         vcovBS(M2),
+                         vcovBS(M2, type='residual')),
+             gof_map = c("nobs", "adj.r.squared"),
+             title = "State Performance in War with Adjustments for Heteroskedasticity. Hi Mom!",
+             stars = TRUE)
 ```
 
-It’d be beneficial to have `{modelsummary}` do this for us. Since this
-really isn’t a `{modelsummary}` class, I’ll just have to [point you
-here](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html#bootstrap)
-for some clarification as to what’s happening here.
-
-``` r
-tidy_custom.boot <- function(x, ...) {
-  set.seed(8675309)
-  model.frame(x) %>%
-    # draw 1000 bootstrap resamples
-    modelr::bootstrap(n = 1000) %>%
-    # estimate the model 1000 times
-    mutate(results = map(strap, ~ update(x, data = .))) %>%
-    # extract results using `broom::tidy`
-    mutate(results = map(results, tidy)) %>%
-    # unnest and summarize
-    unnest(results) %>%
-    group_by(term) %>%
-    summarize(std.error = sd(estimate),
-              estimate = mean(estimate))
-}
-
-M7 <- M1 # Copy M1 to a new model
-class(M7) = c("lm", "boot") 
-# ^ prepares {modelsummary} to summarize this model through a bootstrap.
-
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "HRSE" = M6,
-                  "Bootstrap" = M7),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom! Everyone Say 'Hi' to My Mom!",
-             notes = "Seriously say 'hi' to my mom. She's in Ohio with my two cats.",
-             gof_map = c("nobs", "adj.r.squared"))
-```
-
-<table style="width:86%;">
+<table style="width:95%;">
+<caption>State Performance in War with Adjustments for
+Heteroskedasticity. Hi Mom!</caption>
 <colgroup>
-<col style="width: 19%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
+<col style="width: 18%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 13%" />
 <col style="width: 16%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th></th>
-<th>OLS</th>
+<th>log(LER)</th>
 <th>WLS</th>
-<th>HRSE</th>
+<th>HC0</th>
+<th>HC3</th>
 <th>Bootstrap</th>
+<th>Resid. Boot.</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>(Intercept)</td>
-<td>11.655***</td>
-<td>12.148***</td>
-<td>11.655***</td>
-<td>11.647***</td>
+<td>0.352</td>
+<td>0.386**</td>
+<td>0.352+</td>
+<td>0.352</td>
+<td>0.352+</td>
+<td>0.352</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(1.061)</td>
-<td>(1.041)</td>
-<td>(1.183)</td>
-<td>(1.157)</td>
+<td>(0.302)</td>
+<td>(0.131)</td>
+<td>(0.207)</td>
+<td>(0.221)</td>
+<td>(0.204)</td>
+<td>(0.315)</td>
 </tr>
 <tr class="odd">
-<td>agea</td>
-<td>-0.002</td>
-<td>-0.003</td>
-<td>-0.002</td>
-<td>-0.002</td>
+<td>xm_qudsest</td>
+<td>0.245**</td>
+<td>0.103</td>
+<td>0.245*</td>
+<td>0.245*</td>
+<td>0.245**</td>
+<td>0.245**</td>
 </tr>
 <tr class="even">
 <td></td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-</tr>
-<tr class="odd">
-<td>female</td>
-<td>-0.248</td>
-<td>-0.242</td>
-<td>-0.248</td>
-<td>-0.269</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.338)</td>
-<td>(0.336)</td>
-<td>(0.337)</td>
-<td>(0.327)</td>
-</tr>
-<tr class="odd">
-<td>eduyrs</td>
-<td>0.488***</td>
-<td>0.468***</td>
-<td>0.488***</td>
-<td>0.492***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.049)</td>
-<td>(0.046)</td>
-<td>(0.059)</td>
-<td>(0.058)</td>
-</tr>
-<tr class="odd">
-<td>uempla</td>
-<td>-1.102</td>
-<td>-1.082</td>
-<td>-1.102</td>
-<td>-1.146</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.204)</td>
-<td>(1.246)</td>
-<td>(1.343)</td>
-<td>(1.351)</td>
-</tr>
-<tr class="odd">
-<td>hinctnta</td>
-<td>0.338***</td>
-<td>0.370***</td>
-<td>0.338***</td>
-<td>0.333***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.061)</td>
-<td>(0.061)</td>
-<td>(0.064)</td>
-<td>(0.065)</td>
-</tr>
-<tr class="odd">
-<td>lrscale</td>
-<td>-0.583***</td>
-<td>-0.643***</td>
-<td>-0.583***</td>
-<td>-0.580***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.088)</td>
-<td>(0.088)</td>
+<td>(0.080)</td>
+<td>(0.082)</td>
+<td>(0.095)</td>
 <td>(0.099)</td>
-<td>(0.100)</td>
+<td>(0.090)</td>
+<td>(0.082)</td>
+</tr>
+<tr class="odd">
+<td>wbgdppc2011est</td>
+<td>0.083*</td>
+<td>0.068***</td>
+<td>0.083**</td>
+<td>0.083**</td>
+<td>0.083**</td>
+<td>0.083*</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.036)</td>
+<td>(0.018)</td>
+<td>(0.030)</td>
+<td>(0.032)</td>
+<td>(0.029)</td>
+<td>(0.038)</td>
+</tr>
+<tr class="odd">
+<td>init</td>
+<td>0.120</td>
+<td>0.182*</td>
+<td>0.120</td>
+<td>0.120</td>
+<td>0.120</td>
+<td>0.120</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.134)</td>
+<td>(0.090)</td>
+<td>(0.110)</td>
+<td>(0.114)</td>
+<td>(0.109)</td>
+<td>(0.138)</td>
+</tr>
+<tr class="odd">
+<td>milex</td>
+<td>0.000***</td>
+<td>0.000</td>
+<td>0.000*</td>
+<td>0.000</td>
+<td>0.000</td>
+<td>0.000***</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>mindur</td>
+<td>0.000+</td>
+<td>0.000+</td>
+<td>0.000*</td>
+<td>0.000*</td>
+<td>0.000*</td>
+<td>0.000+</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+<td>(0.000)</td>
+</tr>
+<tr class="odd">
+<td>cinc</td>
+<td>0.722</td>
+<td>0.883</td>
+<td>0.722</td>
+<td>0.722</td>
+<td>0.722</td>
+<td>0.722</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>(0.972)</td>
+<td>(1.032)</td>
+<td>(1.077)</td>
+<td>(1.153)</td>
+<td>(1.137)</td>
+<td>(0.962)</td>
 </tr>
 <tr class="odd">
 <td>Num.Obs.</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
+<td>252</td>
+<td>252</td>
+<td>252</td>
+<td>252</td>
+<td>252</td>
+<td>252</td>
 </tr>
 <tr class="even">
 <td>R2 Adj.</td>
-<td>0.145</td>
-<td>0.156</td>
-<td>0.145</td>
-<td>0.145</td>
-</tr>
-<tr class="odd">
-<td colspan="5"><ul>
-<li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
-</ul></td>
-</tr>
-</tbody><tfoot>
-<tr class="even">
-<td colspan="5">Seriously say ‘hi’ to my mom. She’s in Ohio with my two
-cats.</td>
-</tr>
-</tfoot>
-&#10;</table>
-
-If you had `{sandwich}` installed and ready to go, you could also do it
-this way. `coeftest()` uses `{lmtest}`, which you should’ve installed
-already.
-
-``` r
-set.seed(8675309)
-coeftest(M1, vcov = sandwich::vcovBS(M1, R = 1000))
-#> 
-#> t test of coefficients:
-#> 
-#>               Estimate Std. Error t value  Pr(>|t|)    
-#> (Intercept) 11.6550571  1.1566761 10.0763 < 2.2e-16 ***
-#> agea        -0.0018496  0.0099172 -0.1865    0.8521    
-#> female      -0.2483372  0.3270907 -0.7592    0.4478    
-#> eduyrs       0.4880932  0.0583921  8.3589 < 2.2e-16 ***
-#> uempla      -1.1015334  1.3505118 -0.8156    0.4148    
-#> hinctnta     0.3375713  0.0647572  5.2129 2.128e-07 ***
-#> lrscale     -0.5825911  0.0997979 -5.8377 6.523e-09 ***
-#> ---
-#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-FYI, `{modelsummary}` appears to be able to do this as well without
-having to bootstrap it yourself. In this function, notice that the
-“Bootstrap” model is just `M1`. We are using the `vcov` argument here to
-bootstrap for us. This should work provided you have `{sandwich}`
-installed.
-
-``` r
-set.seed(8675309) # Note: this is optional
-modelsummary(list("OLS" = M1,
-                  "WLS" = M5,
-                  "HRSE" = M6,
-                  "Bootstrap" = M1),
-             stars = TRUE,
-             vcov = c("classical", "classical", "classical", "bootstrap"),
-             R = 1000,
-             gof_map = c("nobs", "adj.r.squared"))
-```
-
-<table style="width:86%;">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th>OLS</th>
-<th>WLS</th>
-<th>HRSE</th>
-<th>Bootstrap</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>(Intercept)</td>
-<td>11.655***</td>
-<td>12.148***</td>
-<td>11.655***</td>
-<td>11.655***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.061)</td>
-<td>(1.041)</td>
-<td>(1.183)</td>
-<td>(1.157)</td>
-</tr>
-<tr class="odd">
-<td>agea</td>
-<td>-0.002</td>
-<td>-0.003</td>
-<td>-0.002</td>
-<td>-0.002</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-<td>(0.010)</td>
-</tr>
-<tr class="odd">
-<td>female</td>
-<td>-0.248</td>
-<td>-0.242</td>
-<td>-0.248</td>
-<td>-0.248</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.338)</td>
-<td>(0.336)</td>
-<td>(0.337)</td>
-<td>(0.327)</td>
-</tr>
-<tr class="odd">
-<td>eduyrs</td>
-<td>0.488***</td>
-<td>0.468***</td>
-<td>0.488***</td>
-<td>0.488***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.049)</td>
-<td>(0.046)</td>
-<td>(0.059)</td>
-<td>(0.058)</td>
-</tr>
-<tr class="odd">
-<td>uempla</td>
-<td>-1.102</td>
-<td>-1.082</td>
-<td>-1.102</td>
-<td>-1.102</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(1.204)</td>
-<td>(1.246)</td>
-<td>(1.343)</td>
-<td>(1.351)</td>
-</tr>
-<tr class="odd">
-<td>hinctnta</td>
-<td>0.338***</td>
-<td>0.370***</td>
-<td>0.338***</td>
-<td>0.338***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.061)</td>
-<td>(0.061)</td>
-<td>(0.064)</td>
-<td>(0.065)</td>
-</tr>
-<tr class="odd">
-<td>lrscale</td>
-<td>-0.583***</td>
-<td>-0.643***</td>
-<td>-0.583***</td>
-<td>-0.583***</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>(0.088)</td>
-<td>(0.088)</td>
-<td>(0.099)</td>
-<td>(0.100)</td>
-</tr>
-<tr class="odd">
-<td>Num.Obs.</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
-<td>1454</td>
-</tr>
-<tr class="even">
-<td>R2 Adj.</td>
-<td>0.145</td>
-<td>0.156</td>
-<td>0.145</td>
-<td>0.145</td>
+<td>0.220</td>
+<td>0.117</td>
+<td>0.220</td>
+<td>0.220</td>
+<td>0.220</td>
+<td>0.220</td>
 </tr>
 </tbody><tfoot>
 <tr class="odd">
-<td colspan="5"><ul>
+<td colspan="7"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
 </tfoot>
 &#10;</table>
 
-The summary here suggests that while we have heteroskedastic errors,
-there does not appear to be any major concern for the standard errors of
-our estimates. That doesn’t mean it can’t happen, and I can point you to
-some examples of assorted heteroskedasticity corrections having major
-substantive implications. No matter, the “solution” to heteroskedastic
-standard errors are more “solutions”, multiple, and involve doing
-robustness tests on your original model to see how sensitive the major
-inferential takeaways are to these alternative estimation procedures.
+
+The summary here suggests that we have heteroskedastic errors, and what
+we elect to do about it—or even if we elect to do anything about it—have
+implications for the inferences we’d like to report. No matter, the
+“solution” to heteroskedastic standard errors are more “solutions”,
+multiple, and involve doing robustness tests on your original model to
+see how sensitive the major inferential takeaways are to these
+alternative estimation procedures.
+
+[^1]: The fatalities offered by Gibler and Miller (2023, Forthcoming)
+    have high and low estimates. We’ll focus on just the low estimates
+    here.
+
+[^2]: We are also going to leave aside an important conversation to have
+    about just how advisable a +1-and-log really is for isolating
+    coefficients of interest and whether this should be a linear model
+    at all. The linear model is probably “good enough”, and certainly
+    for this purpose.
+
+[^3]: “Creep” is 100% the best single off that record, but didn’t have
+    the Windows 95-era CGI. You know I’m right. Stay out of my mentions.

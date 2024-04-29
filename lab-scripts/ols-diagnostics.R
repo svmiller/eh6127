@@ -20,9 +20,29 @@ knitr::opts_chunk$set(collapse = TRUE,
                       fig.path = "figs/lab-5/",
                       cache.path = "cache/lab-5/",
                       fig.width = 11,
+                      tab.cap = NULL,
                       comment = "#>")
 #+
 
+#' ## Elsewhere in My R Cinematic Universe
+#'
+#' I will be doing *a lot* of self-plagiarism in this particular script. I 
+#' taught earlier versions of to MA students [in this department](http://eh6105.svmiller.com/lab-scripts/ols-diagnostics.html), 
+#' and [to PhD students at my previous employer](http://post8000.svmiller.com/lab-scripts/ols-diagnostics-lab.html).
+#' This version is a bit more streamlined, but the verbosity of previous versions
+#' of it might be useful to look over for you.
+#' 
+#' I've also written elsewhere about [how cool bootstrapping is](http://svmiller.com/blog/2020/03/bootstrap-standard-errors-in-r/), 
+#' and about assorted 
+#' [heteroskedasticity robust standard errors](http://svmiller.com/blog/2024/01/linear-model-diagnostics-by-ir-example/).
+#' The latter of the two has an IR application you might find interesting. The 
+#' former is illustrative of what exactly the procedure is doing and how you
+#' could do it yourself.
+#' 
+#' If I link it here, it's because I'm asking you to look at it. Look at it as
+#' it might offer greater insight into what I'm doing and what I'm trying to tell
+#' you.
+#'
 #' ## R Packages/Data for This Session
 #' 
 #' You should've already installed the R packages for this lab session. `{tidyverse}` will be 
@@ -40,56 +60,74 @@ library(stevedata)
 library(stevemisc)
 library(stevethemes) # optional, but I want it...
 library(lmtest)
-library(modelsummary) # optional, but you'll love it. Install it.
-library(fixest) # optional, but you'll love it and should install it.
-library(modelr) # for bootstrapping, also optional.
-
+library(sandwich)
+library(modelsummary)
+options("modelsummary_factory_default" = "kableExtra")
 theme_set(theme_steve()) # optional, but I want it...
 
 #' ## The Data We'll Be Using
 #' 
-#' I'll be using the `ESS9GB` data set in `{stevedata}`. You can find more information
-#' about this data set by typing this into your Rstudio console.
+#' I'll be using the `states_war` data set in `{stevedata}`. You can find more 
+#' information about this data set by typing this into your RStudio console.
+?states_war
 
-?ESS9GB
-
-#' You can also go to my website to read more about it too.
+#' The data offer an opportunity to explore the correlates of performance in war
+#' in a way inspired by [Valentino et al. (2010)](https://doi.org/10.1017/S0022381609990831).
+#' The authors primarily focus on democracy and how democracies allegedly 
+#' minimize the costs of war through assorted means. We'll do the same here.
 #' 
-#' - [What Do We Know About British Attitudes Toward Immigration? A Pedagogical Exercise of Sample Inference and Regression](http://svmiller.com/blog/2020/03/what-explains-british-attitudes-toward-immigration-a-pedagogical-example/)
+#' Let's offer a spiritual replication of the second model of Table 1, focusing
+#' on military fatalities (which is the explicit focus of the Gibler-Miller 
+#' conflict data we'll be using). However, we need to create some variables. 
+#' First, we're going to create a kind of "loss exchange ratio" variable. 
+#' Formally, this variable is equal to the fatalities imposed on the enemy 
+#' combatant(s) divided over the fatalities suffered by the state, adding 1 to 
+#' the denominator of that equation to prevent division by 0. We'll create this
+#' one, and another that's proportional (i.e. imposed fatalities over imposed
+#' fatalities and state's own fatalities). Play with this to your heart's 
+#' content.[^min] Second, we're going to create an initiator variable (`init`) to 
+#' isolate those states that make conscious forays into war. From my experience
+#' creating data for `{peacesciencer}`, it is usually (though not always) the
+#' case that you can discern initiation from whether it's on the Side A and/or
+#' it's an original participant. To get to the point, the initiator variable 
+#' will be 1 if 1) it's on Side A (i.e. the side that made the first incident)
+#' *and* it's an original participant and 2) if it's *not* an original 
+#' participant (often meaning it self-selected into the conflict). Otherwise,
+#' it will be a 0.
 #' 
-#' Let's suppose we want to model how positively Brits think about immigration and
-#' immigrants in this European Social Survey round from 2018-19. That information
-#' is captured in the `immigsent` variable in the data set, itself an additive
-#' index of three other variables. Following the stuff I put on my website, I
-#' want to understand attitudes about immigration and immigrants as a function
-#' of the respondent's age in years (`agea`), whether the respondent is
-#' a woman (`female`), years of education (`eduyrs`), whether the respondent
-#' is temporarily unemployed but looking for work (`uempla`), the household
-#' income of the respondent (in deciles, `hinctnta`), and the respondent's
-#' ideology on an 11-point left-right scale (`lrscale`). Higher values of
-#' `immigsent` indicates greater positive orientation or receptiveness to 
-#' immigrants/immigration.
+#' [^min]: The fatalities offered by Gibler and Miller (2023, Forthcoming) have
+#' high and low estimates. We'll focus on just the low estimates here.
+# M1 <- lm(jci ~ literacy_ba + s_leperc*s_partydom + turnout, A)
+states_war %>%
+  mutate(ler = oppfatalmin/(fatalmin + 1),
+         lerprop = oppfatalmin/(fatalmin + oppfatalmin),
+         init = case_when(
+           sidea == 1 & orig == 1 ~ 1,
+           orig == 0 ~ 1,
+           TRUE ~ 0
+  )) -> Data
 
-M1 <- lm(immigsent ~ agea + female + eduyrs + uempla + hinctnta + lrscale, 
-         ESS9GB, na.action = na.exclude)
+#' Now, let's do a kind-of replication of the second model in Table 1, where
+#' we'll model the first loss exchange ratio variable (LER) we created (`ler`) 
+#' as a function of democracy (`xm_qudsest`), GDP per capita (`wbgdppc2011est`),
+#' the initiator variable (`init`), the military expenditures of the state 
+#' (`milex`), the duration of the participant's stay in conflict (`mindur`), and 
+#' the familiar estimate of power provided by CoW's National Material 
+#' Capabilities data as the composite index of national capabilities (`cinc`).
 
-#' Notice the `na.action = na.exclude` argument in the `lm()` function. For 
-#' most real world data sets where you want R to ignore the missing data,
-#' but maintain the original dimensions of the data set, you'll want to
-#' include this argument in the formula.
-#' 
-#' This regression returns the following results. We observe significant
-#' partial associations ideology, household income, and years of education,
-#' though we see no discernible associations/effects for age, the respondent's
-#' gender, and the unemployment variable. The unemployment variable might be
-#' a little surprising from the political economy of immigration framework,
-#' but see [this paper of mine](http://svmiller.com/research/economic-anxiety-ethnocentrism-immigration-1992-2017/)
-#' for skepticism about these arguments in the American context and see this
-#' [blog post](http://svmiller.com/blog/2021/02/thinking-about-your-priors-bayesian-analysis/)
-#' that riffs on the unemployment effect as a weak data problem.
+M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + 
+           xm_qudsest + mindur + cinc, 
+         Data)
+
+#' Okie doke, let's see what we got.
 
 summary(M1)
 
+#' I can already anticipate some design decisions got us to this point, but the
+#' model suggests only military expenditures matter to understanding performance
+#' in war. Higher values of military expenditures coincide with higher LER. That
+#' tracks, at least.
+#' 
 #' Now, let's do some diagnostic testing.
 #' 
 #' ## Linearity
@@ -108,28 +146,127 @@ summary(M1)
 #' By definition, the "rise over run" line is flat at 0. The LOESS smoother will
 #' communicate whether that's actually a line of good fit.
 #' 
-#' First, let's use the `augment()` function in `{broom}` to extract some
-#' pertinent information from the model and store it in the data itself.
-
-broom::augment(M1, data=ESS9GB) -> ESS9GB
-
-#' Now, let's create the plot. There's actually a base R function that will
-#' do this for you beginners.
-
+#' Base R has a function that can do this for you. `plot()` is a default 
+#' function in R that, if applied to an object created by `lm()`, will create
+#' a battery of graphs for you. You just want the first one, which you can 
+#' specify with the `which` argument. Observe.
+#' 
 plot(M1, which=1)
 
-#' You should do this in `{ggplot2}` though, because there's more you can do 
-#' with it.
+#' Eww, gross. That shouldn't look like that. Gross.
 #' 
-ESS9GB %>%
+#' You may also want to use this an opportunity to learn about the `augment()`
+#' function in `{broom}`. You can use this to extract pertinent information from
+#' the model. First, let's see what comes out.
+#' 
+broom::augment(M1)
+# ?augment.lm() # for more information
+
+#' We want just the fitted values and the residuals here. The former goes on
+#' the *x*-axis and the latter goes on the *y*-axis for the plot to follow.
+
+broom::augment(M1) %>%
   ggplot(.,aes(.fitted, .resid)) +
   geom_point(pch = 21) +
   geom_hline(yintercept = 0, linetype="dashed", color="red") +
   geom_smooth(method = "loess")
 
-#' Oh yeah, that's not ideal. The fitted-residual plot is broadly useful for
-#' other things too (i.e. it's pointing to some discreteness in the DV), but
-#' it's also pointing to a line through the data that looks like a water slide.
+#' Again, gross. Just, eww. Gross.
+#' 
+#' You should've anticipated this in advance if you had some subject domain
+#' expertise. These are large nominal numbers, in war, that could be decicedly
+#' lopsided. For example, here's the U.S. performance against Iraq in the Gulf
+#' War.
+
+Data %>% filter(ccode == 2 & micnum == 3957) %>%
+  select(micnum:enddate, fatalmin, oppfatalmin, ler)
+
+#' In other words, the U.S. killed almost 27 Iraqi troops for every American 
+#' soldier killed by the Iraqi military. That's great for battlefield performance
+#' from the perspective of the Department of Defense, but it's going to point
+#' to some data issues for the analyst.
+#' 
+#' Indeed, here's what the dependent variable looks like.
+
+Data %>%
+  ggplot(.,aes(ler)) +
+  geom_density()
+
+#' Here, btw, is what it's natural logarithm would look like, and what the 
+#' proportion variable we created would look like by way of comparison. Believe 
+#' me  when I say I know what I'm doing with the code here. Trust me; I'm a 
+#' doctor.
+
+Data %>%
+  select(ler, lerprop) %>%
+  mutate(log_ler = log(ler + 1)) %>%
+  gather(var, val) %>%
+  ggplot(.,aes(val)) +
+  geom_density() +
+  facet_wrap(~var, scales='free', nrow= 3)
+
+#' The linear model does not require normally distributed DVs in order to 
+#' extract (reasonably) linear relationships. However, we should've not done 
+#' this, and we should've known in advance that we should not have done this.
+#' So, let's take a step back and re-estimate the model two ways. The first will
+#' do a +1 and log of the DV and the second will use the proportion variable
+#' we created earlier. This might be a good time as well to flex with the
+#' `update()` function in R.
+Data %>% mutate(ln_ler = log(ler + 1)) -> Data
+
+M2 <- update(M1, ln_ler ~ . , na.action=na.exclude)
+M3 <- update(M1, lerprop ~ . , .)
+
+#' Briefly: this is just updating `M1` to change the two DVs. A dot (`.`) is a
+#' kind of placeholder in R to keep "as is." You can read `~ . , .` as saying
+#' "regressed on the same stuff as before and keeping the other arguments we
+#' supplied to it before (like the data)." The first one has a little parlor
+#' trick, for which I'll reveal its utility later. It adds `na.action=na.exclude`
+#' to the list of arguments passed to the model. For most real world data sets 
+#' where you want R to ignore the missing data, but maintain the original 
+#' dimensions of the data set, you’ll want to include this argument in the 
+#' formula. This will concern the `wls()` function I'll show you later.
+#' 
+#' Now, let's also flex our muscles with `modelsummary()` to see what these 
+#' alternate estimations mean for the inferences we'd like to report.
+
+modelsummary(list("LER" = M1, 
+                  "log(LER + 1)" = M2, 
+                  "LER Prop." = M3),
+             title = "Hi Mom!",
+             stars = TRUE,
+             align = c("lccc"),
+             )
+
+#' The results here show that it's not just a simple matter that "different DVs
+#' = different results". Far from it. Different *reasoned* design decisions can
+#' be the matter of the different results you observe. Using more reasonable
+#' estimates of battlefield performance (either logged loss exchange ratio or 
+#' its proportion form) results in models that make more sense with respect to
+#' the underlying phenomenon you should care to estimate. In our case, it's the
+#' difference of saying whether there is an effect to note for democracy, GDP
+#' per capita, and duration in conflict.
+#' 
+#' Still, we may want to unpack these models a bit more, much like we did above.
+#' Let's focus on `M2` for pedagogy's sake, even though there is more reason to
+#' believe the third model is the less offensive of the two.[^glm] Let's get 
+#' our fitted-residual plot.
+#' 
+#' [^glm]: We are also going to leave aside an important conversation to have 
+#' about just how advisable a +1-and-log really is for isolating coefficients
+#' of interest and whether this should be a linear model at all. The linear 
+#' model is probably "good enough", and certainly for this purpose.
+
+broom::augment(M2, data=Data) %>%
+  ggplot(.,aes(.fitted, .resid)) +
+  geom_point(pch = 21) +
+  geom_hline(yintercept = 0, linetype="dashed", color="red") +
+  geom_smooth(method = "loess")
+
+#' It's still not ideal. The fitted-residual plot is broadly useful for
+#' other things too, and it's screaming out loud that I have a heteroskedasticity
+#' problem and some discrete clusters in the DV. However, it wants to imply some
+#' non-linearity as well.
 #' 
 #' One limitation of the fitted-residual plot, however, is that it won't tell you
 #' where exactly the issue might be. That's why I wrote the `linloess_plot()` in
@@ -138,80 +275,85 @@ ESS9GB %>%
 #' Do note this tells you nothing about binary IVs, but binary IVs aren't the 
 #' problem here.
 
-linloess_plot(M1, pch=21)
+linloess_plot(M2, pch=21)
 
-#' {car} has this one for you, if you'd like. I'll concede it works better than
+#' `{car}` has this one for you, if you'd like. I'll concede it works better than
 #' my function at the moment.
 
-car::residualPlots(M1)
+car::residualPlots(M2)
 
 #' The thing I like about this plot is that it can point to multiple problems, 
 #' though it won't point you in the direction of any potential interactions. No 
-#' matter, here it shows any proxy for the education-level of the respondent in 
-#' a developed European country like the United Kingdom is going to have two 
-#' sources of weirdness. For one, very few respondents will have so few years 
-#' of education indicating they are something like a primary school dropout. 
-#' They exist, and they can be anyone in the native-born UK population for all 
-#' I know, but they're rare. Second, you'll have some career students 
-#' (överliggare, I believe you Swedes call them). They also exist, but they're 
-#' rare. Maybe you want to implement some kind of left- and right-truncation. 
-#' Wonder what that might be here.
+#' matter, here it points to several things that I may want to ask myself about
+#' the data. I'll go in order I see them.
 #' 
-
-ESS9GB %>% count(eduyrs) %>% na.omit %>%
-  ggplot(.,aes(as.factor(eduyrs), n)) + geom_bar(stat='identity')
-
-#' Hmm. How about this: below 10: 10. Above 20: 20. We'll truncate the data
-#' on the left and right end.
-
-ESS9GB %>%
-  mutate(eduyrsrc = case_when(
-    # if it's 10 or below: 10
-    eduyrs <= 10 ~ 10,
-    # if it's 20 or above: 20
-    eduyrs >= 20 ~ 20,
-    # if it's anything else (i.e. in those bounds): keep it as is.
-    TRUE ~ eduyrs
-  )) -> ESS9GB
-
-#' There's also some interesting patterns about ideology too. It looks like 
-#' those heap in the middle of this (11-point) scale of ideology are behaving 
-#' differently than those who lean left or those who lean right. That might 
-#' imply that the ideology variable might be better recoded as a categorical 
-#' variable. In other words, something like this.
-
-ESS9GB %>% 
-  mutate(ideocat = case_when(
-    lrscale < 5 ~ "Left",
-    lrscale == 5 ~ "Center",
-    lrscale > 5 ~ "Right"
-  )) %>%
-  mutate(ideocat = fct_relevel(ideocat, "Center")) -> ESS9GB
-
-
-#' The solutions here are largely up to you. Let's re-estimate the model with 
-#' the following changes. We'll include our truncated education variable, square 
-#' the age variable, and introduce the ideology variable as a fixed effect (in 
-#' lieu of the `lrscale` variable). Let's see what that does.
+#' 1. Does democracy need a square term? It seems like the most autocratic
+#' and the most democratic perform better than those democracies "in the middle".
+#' There's ample intuition behind this in the democratic peace literature, which
+#' emphasizes there is a real difference between a democracy like Sweden and a 
+#' fledgling democratizing state like mid-1990s Serbia. Intuitively, there is 
+#' also a qualitative difference between a durable autocracy like Iran now 
+#' versus a fledgling autocracy like Iran in the early 1980s. We might be seeing
+#' that here.
 #' 
-M2 <- lm(immigsent ~ agea + I(agea^2) + female + eduyrsrc + 
-           uempla + hinctnta + ideocat, 
-         ESS9GB, na.action = na.exclude)
-summary(M2)
+#' 2. The GDP per capita variable has some clusters. It's already log-transformed,
+#' so I'm disinclined to take a log of a log. It's technically benchmarked in
+#' 2011 USD, so there's not an issue of nominal or real dollars here. Some
+#' states are just poor? In our data, I see a jump from 2.428 (Mecklenburg in 
+#' the First Schleswig War) to 5.815 (i.e. Ethiopia in the Second 
+#' Italian-Ethiopian War). A few things might be happening here, and it's worth
+#' noting estimates of GDP per capita in the 19th century are *always* 
+#' tentative and prone to some kind of measurement error. It might be ideal to 
+#' proportionalize (sic) these, much like we did with the LER variable. However, 
+#' that would require more information (on my end, behind the scenes) than we 
+#' have here. Perhaps we just make a poverty dummy here and leave well enough
+#' alone, mostly to see if there is any sensitivity to those observations. The
+#' line doesn't look like it's affected.
+#' 
+#' 3. It might make sense to log-transform military expenditures and duration.
+#' We'd have to do a +1-and-log to expenditures because there are states in war
+#' that don't register in the thousands, per the National Material Capabilities
+#' data.
+#' 
+#' With that out of the way, let's create some variables of interest to us and
+#' re-estimate Model 2.
 
-#' From this changed model, we don't see a discernible difference between the 
-#' right and center, but we do see evidence of a curvilinear age effect.
+Data %>%
+  mutate(povdum = ifelse(wbgdppc2011est < 4, 1, 0),
+         ln_mindur = log(mindur),
+         ln_milex = log(milex + 1)) -> Data
 
-#' How else you choose to deal with this is up to you, but these diagnostics at 
-#' least point to the problem and the discussion here at least suggests some 
-#' potential fixes. Just be mindful that any polynomial effects you include in a 
-#' model have to be justified by you, the one doing the higher-order polynomials. 
-#' Always be prepared to explain anything you're doing.
+
+M4 <- lm(log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + 
+           wbgdppc2011est + ln_milex + ln_mindur + cinc,
+         Data)
+summary(M4)
+
+#' I don't think it's going to be an issue, but now I'm curious...
+summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
+
+#' We don't have a lot of observations to play with here, and the observations
+#' affected here are decidedly unrepresentative of the overall population of 
+#' cases. I wouldn't sweat this issue, other than perhaps as a call to restrict
+#' any serious analysis to just the 20th century when we developed better 
+#' capacity for calculating estimates of economic size and wealth. All the 
+#' observations affected here are in the 19th century and, wouldn't you know it,
+#' all concern the wars of Italian/German unification.
+#' 
+#' You're welcome to play more with the diagnostics of these models, though it
+#' comes with the caveat that you're making linear assumptions anyway when you
+#' estimate this model. Don't go chasing waterfalls, only the rivers and the 
+#' lakes to which you are used... to. I know you're going to have it your way or
+#' (more than likely) use no statistical model at all. Let's just not move too 
+#' fast.[^creep]
+#' 
+#' [^creep]: "Creep" is 100% the best single off that record, but didn't have
+#' the Windows 95-era CGI. You know I'm right. Stay out of my mentions.
 #' 
 #' ## Independence 
 #' 
-#' The OLS model assumes the independence of the model's errors and that any pair
-#' of errors are going to be uncorrelated with each other. Past observations 
+#' The linear model assumes the independence of the model's errors and that any 
+#' pair of errors are going to be uncorrelated with each other. Past observations 
 #' (and past errors) should not inform other pairs of errors. In formal terms, 
 #' this assumption seems kind of Greek to students. In practice, think of it 
 #' this way. A lot of the theoretical intuition behind OLS is assuming something 
@@ -248,27 +390,72 @@ summary(M2)
 #' The Durbin-Watson test has some pretty strong assumptions and only looks for 
 #' a order-1 autocorrelation. No matter, it has some informational value when 
 #' you get deeper into the weeks of time series stuff. Both can be estimated by 
-#' way of the `{lmtest}` package. Let's go back to our first model and apply both.
+#' way of the `{lmtest}` package. Let's go back to our model and apply both.
 #'  
-dwtest(M1)
-bgtest(M1)
+dwtest(M2)
+bgtest(M2)
 
 #' The "null" hypothesis of both tests is "no autocorrelation." The alternative 
 #' hypothesis is "autocorrelation." When the *p*-value is sufficiently small, 
-#' it indicates a problem. Here, they suggest no real problem and no further 
-#' fix is needed. That is not terribly surprising in this case, as the data are
-#' a random sample from the population and done in a mostly time-invariant way. 
-#' If there was a serial/spatial correlation to fix, consider some kind of 
-#' region fixed effects in this case. It'd be something like this.
+#' it indicates a problem. Here, they seem to suggest some kind of
+#' autocorrelation, though the data aren't exactly a panel or a time series.
+#' Understand, again, these tests are making particular assumptions about your
+#' data that we don't quite have, and that you should learn to anticipate
+#' these issues without needing a textbook test to do it for you. I don't have
+#' the time or opportunity to belabor these issues in detail, but:
 #' 
-M3 <- update(M1, ~. + factor(region)) 
-# ^ update M1, keep everything as is, add region fixed effects
-summary(M3)
+#' 1. When you read quant stuff in IR, especially the kind of stuff you might
+#' see my name attached to or people I otherwise know, you'll see so-called
+#' "clustered" standard errors that are often "spatial" or cross-sectional in
+#' scope. For example, there is good reason to believe the American observations
+#' in this model are related to each other. British observations should be 
+#' related to other British observations, and so on.
+#' 
+#' 2. Much like you'd see in a panel model, you might also see so-called 
+#' "fixed effects" applied here. This might take on multiple forms. If I had any
+#' reason to believe whatsoever that conflicts within particular regions are
+#' different from each other, I could create a series of dummies that say "is
+#' this war in Europe or not" or "is this in Sub-Saharan Africa or not?" Or,
+#' perhaps, I have reason to believe there is a clustering of observation by
+#' era or moment in time. The world war eras are different from the Cold War
+#' eras, and so on. 
+#' 
+#' I can create these ad hoc with the information available in the data I have.
+#' The `stdate` column has the start of the first event by the participant in 
+#' war. I can extract that with `str_sub()` (getting the last four digits), 
+#' and convert that to a numeric integer for year. Then, I can use a 
+#' `case_when()` call to categorize whether the observation was before 
+#' World War I, between and involving both world wars, during the Cold War, or
+#' after the Cold War.
+
+Data %>%
+  mutate(year = str_sub(stdate, -4, -1)) %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(period = case_when(
+    year <= 1913 ~ "Pre-WW1",
+    between(year, 1914, 1945) ~ "WW1 and WW2 Era",
+    between(year, 1946, 1990) ~ "Cold War",
+    year >= 1991 ~ "Post-Cold War"
+  )) %>%
+  mutate(period = fct_relevel(period, "Pre-WW1", "WW1 and WW2 Era",
+                              "Cold War")) -> Data
+
+M5 <- update(M2, . ~ . + period, Data)
+modelsummary(list("log(LER + 1)" = M2, 
+                  "w/ Period FE" = M5),
+             stars = TRUE,
+             title = "Hi Mom!",
+)
 
 #' Do note fixed effects in this application have a tendency to "demean" other
-#' things in the model, though they're not telling you much here. Indeed, you 
-#' didn't have much of a problem.
-#' 
+#' things in the model, and they have a slightly different interpretation. For
+#' example, though both are "significant" and "look the same", the GDP per
+#' capita effect is now understood as the effect of *increasing* GDP per capita
+#' *within periods* rather than higher *levels* of GDP per capita, per se. You
+#' do observe some period weirdness. Compared to the pre-WWI era, logged LER is
+#' generally lower in the interwar years and generally lower in the Cold War,
+#' importantly partialing out the other information in the model.
+
 #' No matter, if you have autocorrelation, you have to tackle it outright or 
 #' your OLS model has no inferential value. The exact fix depends on the exact 
 #' nature of the problem, which will definitely depend on you knowing your data 
@@ -306,8 +493,8 @@ summary(M3)
 #' the same thing. You can explore a few of these in the `{nortest}` package.
 #' 
 
-shapiro.test(resid(M1))
-ks.test(resid(M1), y=pnorm)
+shapiro.test(resid(M2))
+ks.test(resid(M2), y=pnorm)
 
 #' When *p*-values are sufficiently small, these tests are saying "I can 
 #' determine these weren't generated by some kind of normal distribution." My 
@@ -323,7 +510,7 @@ shapiro.test(lambdas <- rpois(1000, 100))
 #' I should not have passed this test, and yet I did. These aren't normally
 #' distributed. They're Poisson-distributed, and can't be reals.
 
-#' Second, thse normality tests are deceptively just a test of sample size. The 
+#' Second, these normality tests are deceptively just a test of sample size. The 
 #' more observations you have, the more sensitive the test is to any observation 
 #' in the distribution that looks anomalous. Three, textbooks typically say to 
 #' use the K-S test if you have a large enough sample size, but, from my 
@@ -334,53 +521,38 @@ shapiro.test(lambdas <- rpois(1000, 100))
 #' one, the "textbook" visual diagnostic is the Q-Q plot. This is actually a 
 #' default plot in base R for linear models if you know where to look.
 #' 
-plot(M1, which=2)
+plot(M2, which=2)
 
-#' The Q-Q plots the theoretical quantiles of the residuals against the standardized
-#' residuals. Ideally, they all fall on a nice line. Here, they don't, suggesting a
-#' problem. The negative residuals are more negative than expected and the 
-#' positive residuals are more positive than expected.
+#' The Q-Q plots the theoretical quantiles of the residuals against the 
+#' standardized residuals. Ideally, they all fall on a nice line. Here, they 
+#' don't, suggesting a problem. The negative residuals are more negative than 
+#' expected at the tail end of the distribution (which is almost always 
+#' unavoidable for real-world data at the tails) but the higher residuals are
+#' more positive than expect for the higher quantiles. This one is more
+#' problematic. You could've anticipated this knowing that there is still a
+#' right skew in the DV even after its logarithmic transformation.
 #' 
 #' I mentioned in lecture that a better way of gauging just how severe the issue 
 #' is will involve generating a density plot of the residuals against a 
 #' stylized density plot matching the description of the residuals (i.e. with a 
 #' mean of 0 and a standard deviation equal to the standard deviation of the 
-#' residuals). It would look something like this.
+#' residuals). It would look something like this for `M2`.
 #' 
-ESS9GB %>%
-  ggplot(.,aes(.resid)) +
-  geom_density(size = 1.1) +
-  stat_function(fun = dnorm, color="blue",
-                args = list(mean = 0, 
-                            sd = sd(ESS9GB$.resid, na.rm=T)),
-                linetype="dashed", size=1.1) 
+rd_plot(M2)
 
-#' Btw, `rd_plot()` in `{stevemisc}` will do this for you. Here's what it's
-#' doing.
+#' Or this for `M3`:
 
-rd_plot <- function(mod) {
-  
-  sdr <- sd(resid(mod), na.rm=T)
-  
-  hold_this <- data.frame(x = resid(mod))
-  
-  ggplot(hold_this, aes(x)) +
-    geom_density() +
-    stat_function(fun = dnorm, color="blue",
-                  args = list(mean = 0, sd = sdr),
-                  linetype="dashed", linewidth=1.1)
-  
-}
+rd_plot(M3)
 
-rd_plot(M1)
 
-#' In this plot, the black solid line is a density plot of the actual residuals 
-#' whereas the blue, dashed line is a density plot of a normal distribution with 
-#' a mean of 0 and a standard deviation equal to the standard deviation of the 
-#' residuals. The real thing will always be kind of lumpy in some ways when 
-#' you're using actual data. Ask yourself how bad it is. I'd argue that the 
-#' distribution is not ideal though the normality of the residuals is reasonably 
-#' approximated.
+#' In these plots, the black solid line is a density plot of the actual 
+#' residuals  whereas the blue, dashed line is a density plot of a normal 
+#' distribution with  a mean of 0 and a standard deviation equal to the 
+#' standard deviation of the residuals. The real thing will always be kind of
+#' lumpy in some ways when you're using actual data. Ask yourself how bad it is. 
+#' I'd argue that the distribution is not acceptable in the case of `M2`, though
+#' reasonably approximated in `M3`. Both results are fairly similar to each 
+#' other in the stuff we care about.
 #' 
 #' Your solution to this particular "problem" will depend on what exactly you're 
 #' doing in the first place. The instances in which these plots look really 
@@ -434,13 +606,12 @@ rd_plot(M1)
 #' There are two ways to assess whether you have a heteroskedasticity
 #' problem in your OLS model. The first is the fitted-residual plot. You can
 #' ask for that again. This time, have your eye draw kind of an upper bound
-#' and lower bound on the *y*-axis (for the residuals). Are those lines flat/pattern-less?
-#' Tell-tale cases of heteroskedasticity like we discussed in lecture are
-#' cases where you have a cone pattern emerge. It may not be as obvious
-#' as it was in that case, but you might be able to tease out some kind
-#' of non-constant pattern.
+#' and lower bound on the *y*-axis (for the residuals). Are those lines 
+#' flat/pattern-less? Tell-tale cases of heteroskedasticity like we discussed in 
+#' lecture are cases where you have a cone pattern emerge. Sometimes it's not
+#' as obviously cone-shaped. This one is 100% cone-shaped.
 #' 
-plot(M1, which=1)
+plot(M2, which=1)
 
 #' I think I see a pattern, and certainly the pattern of residuals don't look
 #' like random buckshot like I'd want. Fortunately, there's an actual test
@@ -449,7 +620,7 @@ plot(M1, which=1)
 #' The alternate hypothesis is heteroskedasticity. If the *p*-value is
 #' sufficiently small, you have a problem.
 
-bptest(M1)
+bptest(M2)
 
 #' Looks like we have a problem, but what's the solution? Unfortunately,
 #' there's no quick fix, per se, because any single solution to 
@@ -473,194 +644,107 @@ bptest(M1)
 #' The basic "textbook" approach is weighted least squares. I mentioned in
 #' lecture that this approach is kind of convoluted. It's not complicated.
 #' It's just convoluted. The procedure here starts with running the 
-#' offending model (which we already did; it's `M1`). Then, grab the
+#' offending model (which we already did; it's `M2`). Then, grab the
 #' residuals and fitted values from the model. Next, regress the absolute 
 #' value of the residuals on the fitted values of the original model. 
 #' Afterward, extract those fitted values, square them and divide 1 over 
 #' those values. Finally, apply those as weights in the linear model once 
 #' more for a re-estimation.
 #' 
-#' It's not a lot of work. It's tedious, but it's not a lot of work. Note
-#' that we already extracted the fitted values and residuals from `M1` and
-#' added them to the `ESS9GB` data frame. Let's 
-#' [draw the owl](https://knowyourmeme.com/memes/how-to-draw-an-owl) now.
-#' Here's where I'll reiterate that if your base data have missing values
-#' that you want to ignore, it's good practice to specify the `na.action=na.exclude`
-#' argument so that fitted values and residuals from the model will 
-#' maintain the original dimensions of the data.
+#' An older version of this script showed you how you can do it yourself.
+#' Just have `{stevemisc}` do it for you with the `wls()` function.
 
-M4 <- lm(abs(.resid) ~ .fitted, data=ESS9GB,
-         na.action = na.exclude)
-
-ESS9GB %>%
-  mutate(wts = 1/(fitted(M4)^2)) -> ESS9GB
-
-M5 <- update(M1,  ~., 
-             weights = wts)
-
-# summary(M5)
-# ^ This would be if you wanted to look at the model you just ran
-
-# Instead, let's format it into a nice table.
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5),
+modelsummary(list("log(LER)" = M2,
+                  "WLS" = wls(M2)),
              stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
+             title = "A Caption for This Table. Hi Mom!",
              gof_map = c("nobs", "adj.r.squared"))
 
-#' Btw, `{stevemisc}` can do this for you.
-
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "Auto WLS" = wls(M1)),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
-             gof_map = c("nobs", "adj.r.squared"))
-
-#' Re-estimating the model by way of weighted least squares reveals no real
-#' changes. Some parameters moved around a little bit, but everything is
-#' basically within a standard error of each other.
+#' Re-estimating the model by way of weighted least squares reveals some 
+#' interesting changes, leaving open the possibility that any inference we'd
+#' like to report for the democracy variable, the initiator variable, the 
+#' military expenditure variable, and the duration variable are functions of
+#' the heteroskedasticity and whether we dealt with it in the "textbook" way.
 #' 
-#' Another approach is to do what is (informally) called on an "on-the-fly"
-#' standard error correction. In these cases, the point estimates from the
-#' original model remain the same, but adjustments are made to the standard
-#' errors based on the model's variance-covariance matrix. There are any
-#' numbers of ways of doing this---and, again, ad hoc standard error 
-#' corrections are multiple and depend on what exactly you're trying to
-#' accomplish (or think you're accomplishing). If you're interested in this
-#' stuff, you should download the `{sandwich}` package and explore your
-#' options in there. For now, let's use the `{fixest}` package and have this
-#' do our work for us.
+#' There is an entire branch of econometrics that deals with what to do about
+#' your test statistics if you have this problem, and they all seem to have a
+#' unifying aversion to the weighted least squares approach. Their point of
+#' contention is typically that if the implications of heteroskedasticity is the
+#' line is fine but the standard errors are wrong, then the "fix" offered by a
+#' textbook is almost guaranteed to redraw lines. They instead offer a battery
+#' of methods to recalibrate standard errors based on information from the 
+#' variance-covariance matrix to adjust for this. This would make the standard 
+#' errors “robust.”
 #' 
-M6 <- feols(immigsent ~  agea + female + eduyrs + uempla + hinctnta + lrscale,
-            data = ESS9GB, se = "hetero")
-
-# summary(M6)
-# ^ If you wanted to look at what you just estimated.
-
-#' Let's see what happens.
+#' I mention above that I have an entire blog post that discusses some of these
+#' things in more detail than I will offer here. It's a lament that it's never
+#' just "do this and you're done" thing; it's always "fuck around and see what
+#' you find" thing. However, the "classic" standard error corrections are 
+#' so-called "Huber-White" standard errors and are often known by the acronym
+#' "HC0". The suggest defaults you often see in software for "robust" standard
+#' errors are type "HC3", based on this offering from 
+#' [Mackinnon and White (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
 #' 
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "HRSE" = M6),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom!",
-             gof_map = c("nobs", "adj.r.squared"))
-
-#' Not much is changing, though it's not lost on me that the standard errors
-#' that are moving the most are the ones we identified as potentially 
-#' problematic in the lin-loess plot we ran earlier into this script.
+#' Alternatively, if I were you, I'd bootstrap this bad boy. You likewise have
+#' several options here, and I maintain it's fun/advisable to do the bootstrap
+#' yourself rather than have some software bundle do it for you, and I have 
+#' guides on previous course websites and on my blog that show you how to do 
+#' this. Your have myriad options, but I'll focus on just two. The first, the
+#' simple bootstrap pionereed by Bradley Efron, resamples *with replacement* 
+#' from the data and re-runs the model some number of times. In expectation,
+#' the mean coefficients of these re-estimated models converge on what it is
+#' in the offending model (which you would know from central limit theorem). 
+#' However, the *standard deviation of the coefficients is your bootstrapped
+#' standard error*. Another popular approach is a bootstrapped model from the 
+#' residuals. Sometimes called a “Bayesian” or “fractional” bootstrap, this 
+#' approach had its hot girl summer on Twitter two or three years ago and leaves 
+#' the regressors at their fixed values and resamples the residuals and adds 
+#' them to the response variable. 
 #' 
-#' Finally, one other alternative estimation approach is the bootstrap. To 
-#' be clear, there's no single bootstrap. There are multiple bootstraps.
-#' This particular bootstrap is the simple bootstrap where the original data
-#' set is randomly sampled, with replacement, *M* times to create *M* 
-#' replicates of the original data set with the same number of rows
-#' as the original data. The model is then re-estimated *M* times on
-#' each of these replicates. The model parameters returned are the mean
-#' of the coefficients and the bootstrapped standard error is equal to the
-#' standard deviation of the coefficients/estimates. In other words, the
-#' simple bootstrap is mimicking a sampling distribution, which was the 
-#' design of Bradley Efron (the guy that pioneered this procedure).
+#' If you wanted to do any one of these in isolation, you'd want to leverage
+#' the `coeftest()` function in `{lmtest}` with the assorted mechanisms for
+#' futzing with the variance-covariance matrix (or other parts of the model) in
+#' the `{sandwich}` package. For example, what follows below is going to do the
+#' simple bootstrap 1,000 times on `M2`. You can set a reproducible seed with 
+#' the `set.seed()` function for max reproducibility, if you'd like.
+# set.seed(8675309)
+coeftest(M2, vcov = sandwich::vcovBS(M2, R = 1000))
+coeftest(M2) # compare to what M2 actually is.
+
+#' Take a moment to appreciate that you just ran 1,000 regressions on a 1,000 
+#' data replicates in a matter of seconds. Thirty years ago, that would’ve 
+#' taken a weekend at a supercomputer at some American university with a 
+#' billion dollar endowment. Neat, huh?
 #' 
-#' Here's how you'd do that. Using the `{modelr}` package and its
-#' `bootstrap()` function, we'll create 1,000 replicates of the
-#' original data. These are special tibble-lists, that are called
-#' `strap` in the ensuing data frame. Then, using the `map()` function 
-#' in `{purrr}`, which comes by way of the `{tidyverse}`, we're going to 
-#' re-run `M1` on each of these replicates/resamples as another 
-#' column and then "tidy" the results. Then, we're going to extract
-#' them with the `unnest()` function. The reproducible seed will ensure
-#' you and I get the same results from the bootstrap resample procedure.
-#' I have [a blog post that explains this in greater detail](http://svmiller.com/blog/2020/03/bootstrap-standard-errors-in-r/).
-
-set.seed(8675309)
-# Starting with the original data used in M1.
-model.frame(M1) %>%
-  # draw 1000 bootstrap resamples
-  modelr::bootstrap(n = 1000) %>%
-  # estimate the model 1000 times
-  mutate(results = map(strap, ~ update(M1, data = .))) %>%
-  # extract results using `broom::tidy`
-  mutate(results = map(results, tidy)) %>%
-  # unnest and summarize
-  unnest(results) -> bootM1
-
-#' Take a moment to appreciate that you just ran 1,000 regressions on a 1,000 data
-#' replicates in a matter of seconds. Thirty years ago, that would've taken a weekend
-#' at a supercomputer at some American university with a billion dollar endowment. 
-#' Neat, huh?
+#' Anywho, the results of the simple bootstrap suggest a precise effect of 
+#' military expenditures that would not be discerned in the model with 
+#' heteroskedastic standard errors. The other significant coefficients are still
+#' significant, but less precise.
 #' 
-#' Moving on, I want to reiterate that the bootstrapped regression summary is
-#' the mean of the estimates and the standard deviation of the estimates.
-#' I'd be something like this.
-  
-bootM1 %>%
-  group_by(term)  %>%
-  summarize(std.error = sd(estimate),
-            estimate = mean(estimate)) %>%
-    select(term, estimate, `std.error`)
-
-
-#' It'd be beneficial to have `{modelsummary}` do this for us. Since this really isn't
-#' a `{modelsummary}` class, I'll just have to [point you here](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html#bootstrap)
-#' for some clarification as to what's happening here.
-#' 
-
-tidy_custom.boot <- function(x, ...) {
-  set.seed(8675309)
-  model.frame(x) %>%
-    # draw 1000 bootstrap resamples
-    modelr::bootstrap(n = 1000) %>%
-    # estimate the model 1000 times
-    mutate(results = map(strap, ~ update(x, data = .))) %>%
-    # extract results using `broom::tidy`
-    mutate(results = map(results, tidy)) %>%
-    # unnest and summarize
-    unnest(results) %>%
-    group_by(term) %>%
-    summarize(std.error = sd(estimate),
-              estimate = mean(estimate))
-}
-
-M7 <- M1 # Copy M1 to a new model
-class(M7) = c("lm", "boot") 
-# ^ prepares {modelsummary} to summarize this model through a bootstrap.
-
-modelsummary(list("OLS" = M1, 
-                  "WLS" = M5,
-                  "HRSE" = M6,
-                  "Bootstrap" = M7),
-             stars = TRUE,
-             caption = "A Caption for This Table. Hi Mom! Everyone Say 'Hi' to My Mom!",
-             notes = "Seriously say 'hi' to my mom. She's in Ohio with my two cats.",
-             gof_map = c("nobs", "adj.r.squared"))
-
-#' If you had `{sandwich}` installed and ready to go, you could also do it this 
-#' way. `coeftest()` uses `{lmtest}`, which you should've installed already.
-set.seed(8675309)
-coeftest(M1, vcov = sandwich::vcovBS(M1, R = 1000))
-
-#' FYI, `{modelsummary}` appears to be able to do this as well without having to
-#' bootstrap it yourself. In this function, notice that the "Bootstrap" model
-#' is just `M1`. We are using the `vcov` argument here to bootstrap for us. This
+#' #' FYI, `{modelsummary}` appears to be able to do this as well. In this 
+#' function, notice that the "Bootstrap" model is just `M1`. We are using the `vcov` argument here to bootstrap for us. This
 #' should work provided you have `{sandwich}` installed.
 
-set.seed(8675309) # Note: this is optional
-modelsummary(list("OLS" = M1,
-                  "WLS" = M5,
-                  "HRSE" = M6,
-                  "Bootstrap" = M1),
-             stars = TRUE,
-             vcov = c("classical", "classical", "classical", "bootstrap"),
-             R = 1000,
-             gof_map = c("nobs", "adj.r.squared"))
+modelsummary(list("log(LER)" = M2,
+                  "WLS" = wls(M2),
+                  "HC0" = M2,
+                  "HC3" = M2,
+                  "Bootstrap" = M2,
+                  "Resid. Boot." = M2),
+             vcov = list(vcovHC(M2,type='const'),
+                         vcovHC(wls(M2)),
+                         vcovHC(M2,type='HC0'),
+                         vcovHC(M2, type='HC3'),
+                         vcovBS(M2),
+                         vcovBS(M2, type='residual')),
+             gof_map = c("nobs", "adj.r.squared"),
+             title = "State Performance in War with Adjustments for Heteroskedasticity. Hi Mom!",
+             stars = TRUE)
 
-#' The summary here suggests that while we have heteroskedastic errors, there
-#' does not appear to be any major concern for the standard errors of our estimates.
-#' That doesn't mean it can't happen, and I can point you to some examples of
-#' assorted heteroskedasticity corrections having major substantive implications.
-#' No matter, the "solution" to heteroskedastic standard errors are more "solutions",
-#' multiple, and involve doing robustness tests on your original model to see how
+#' The summary here suggests that we have heteroskedastic errors, and what we
+#' elect to do abou it---or even if we elect to do anything about it---have 
+#' implications for the inferences we'd like to report. No matter, the 
+#' "solution" to heteroskedastic standard errors are more "solutions", multiple, 
+#' and involve doing robustness tests on your original model to see how 
 #' sensitive the major inferential takeaways are to these alternative estimation
 #' procedures.
