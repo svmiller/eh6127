@@ -13,6 +13,7 @@ output:
    md_document:
      variant: gfm
      preserve_yaml: TRUE
+always_allow_html: true
 ---
 
 ## Elsewhere in My R Cinematic Universe
@@ -31,7 +32,17 @@ and about assorted [heteroskedasticity robust standard
 errors](http://svmiller.com/blog/2024/01/linear-model-diagnostics-by-ir-example/).
 The latter of the two has an IR application you might find interesting.
 The former is illustrative of what exactly the procedure is doing and
-how you could do it yourself.
+how you could do it yourself. Finally, IRIII.2 students in our
+department also get the same [“check this shit out” approach to
+`{modelsummary}`](http://ir3-2.svmiller.com/lab-scripts/lab-5/). You all
+will be saying hi to my mom in Ohio a lot.
+
+Finally, I want to make sure you all understand what happens in the
+linear model when there are log-transformed variables on one or both
+sides of the regression equation. A shorthand way of thinking about this
+is that [log transformations proportionalize (sic)
+changes](http://svmiller.com/blog/2023/01/what-log-variables-do-for-your-ols-model/)
+on the untransformed scale. Please read that blog post carefully.
 
 If I link it here, it’s because I’m asking you to look at it. Look at it
 as it might offer greater insight into what I’m doing and what I’m
@@ -90,6 +101,18 @@ options("modelsummary_factory_default" = "kableExtra")
 # pivot to `{modelsummary}`'s default.
 theme_set(theme_steve()) # optional, but I want it...
 ```
+
+I want to add here that the output format of this script, if you’re
+reading it on my website, is to Markdown. The tables themselves are
+HTML, which Markdown can handle quite nicely through Github. However,
+there is a lever I need to toggle to disable the table captions from
+also becoming standalone paragraphs in Markdown format. I don’t know
+what that lever is based on my cornball workflow spinning this `.R` file
+to a `.md` file. This is *not* a problem you will have formatting for
+LaTeX or HTML, but it will make for a somewhat clumsy viewing experience
+on the course website.
+
+Okay then, let’s get on with the show.
 
 ## The Data We’ll Be Using
 
@@ -266,7 +289,7 @@ Again, gross. Just, eww. Gross.
 
 You should’ve anticipated this in advance if you had some subject domain
 expertise. These are large nominal numbers, in war, that could be
-decicedly lopsided. For example, here’s the U.S. performance against
+decidedly lopsided. For example, here’s the U.S. performance against
 Iraq in the Gulf War.
 
 ``` r
@@ -313,10 +336,11 @@ Data %>%
 The linear model does not require normally distributed DVs in order to
 extract (reasonably) linear relationships. However, we should’ve not
 done this, and we should’ve known in advance that we should not have
-done this. So, let’s take a step back and re-estimate the model two
-ways. The first will do a +1 and log of the DV and the second will use
-the proportion variable we created earlier. This might be a good time as
-well to flex with the `update()` function in R.
+done this. What estimate of central tendency could we expect from a
+variable that looks like this? So, let’s take a step back and
+re-estimate the model two ways. The first will do a +1 and log of the DV
+and the second will use the proportion variable we created earlier. This
+might be a good time as well to flex with the `update()` function in R.
 
 ``` r
 Data %>% mutate(ln_ler = log(ler + 1)) -> Data
@@ -326,15 +350,13 @@ M3 <- update(M1, lerprop ~ .)
 ```
 
 Briefly: this is just updating `M1` to change the two DVs. A dot (`.`)
-is a kind of placeholder in R to keep “as is.” You can read `~ . , .` as
+is a kind of placeholder in R to keep “as is.” You can read `~ .` as
 saying “regressed on the same stuff as before and keeping the other
-arguments we supplied to it before (like the data).” The first one has a
-little parlor trick, for which I’ll reveal its utility later. It adds
-`na.action=na.exclude` to the list of arguments passed to the model. For
-most real world data sets where you want R to ignore the missing data,
-but maintain the original dimensions of the data set, you’ll want to
-include this argument in the formula. This will concern the `wls()`
-function I’ll show you later.
+arguments we supplied to it before (like the data).” You’ll see me
+return to more uses of this with the `wls()` function, which really
+wants a data set with no missing values or for you to have supplied
+`na.action=na.exclude` as an optional argument in the `lm()` function.
+We’ll deal with this detail later.
 
 Now, let’s also flex our muscles with `modelsummary()` to see what these
 alternate estimations mean for the inferences we’d like to report.
@@ -345,7 +367,6 @@ modelsummary(list("LER" = M1,
                   "LER Prop." = M3),
              title = "Hi Mom!",
              stars = TRUE,
-             align = c("lccc"),
              )
 ```
 
@@ -501,6 +522,8 @@ modelsummary(list("LER" = M1,
 </tfoot>
 &#10;</table>
 
+Hi Mom!
+
 The results here show that it’s not just a simple matter that “different
 DVs = different results”. Far from it. Different *reasoned* design
 decisions can be the matter of the different results you observe. Using
@@ -566,10 +589,10 @@ car::residualPlots(M2)
     #> ---
     #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-The thing I like about this plot is that it can point to multiple
-problems, though it won’t point you in the direction of any potential
-interactions. No matter, here it points to several things that I may
-want to ask myself about the data. I’ll go in order I see them.
+The thing I like about this kind of plot is that it can point to
+multiple problems, though it won’t point you in the direction of any
+potential interactions. No matter, here it points to several things that
+I may want to ask myself about the data. I’ll go in order I see them.
 
 1.  Does democracy need a square term? It seems like the most autocratic
     and the most democratic perform better than those democracies “in
@@ -671,6 +694,9 @@ summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
 #>   (3 observations deleted due to missingness)
 #> Multiple R-squared:  0.628,  Adjusted R-squared:  0.4213 
 #> F-statistic: 3.038 on 5 and 9 DF,  p-value: 0.07031
+# ^ you can read this `update()` as "update M4, keep DV and bulk of IVs, but
+#   remove the square term and change the data to just those in Data where
+#   povdum == 1.
 ```
 
 We don’t have a lot of observations to play with here, and the
@@ -966,6 +992,7 @@ modelsummary(list("log(LER + 1)" = M2,
 </tfoot>
 &#10;</table>
 
+Hi Mom!
 
 Do note fixed effects in this application have a tendency to “demean”
 other things in the model, and they have a slightly different
@@ -1233,12 +1260,12 @@ optional argument in `lm()`. We can cheese that here with an `update()`.
 modelsummary(list("log(LER)" = M2,
                   "WLS" = wls(update(M2, na.action=na.exclude))),
              stars = TRUE,
-             title = "A Caption for This Table. Hi Mom!",
+             title = "Hi Mom!",
              gof_map = c("nobs", "adj.r.squared"))
 ```
 
 <table style="width:54%;">
-<caption>A Caption for This Table. Hi Mom!</caption>
+<caption>Hi Mom!</caption>
 <colgroup>
 <col style="width: 23%" />
 <col style="width: 15%" />
@@ -1341,6 +1368,7 @@ modelsummary(list("log(LER)" = M2,
 </tfoot>
 &#10;</table>
 
+Hi Mom!
 
 Re-estimating the model by way of weighted least squares reveals some
 interesting changes, leaving open the possibility that any inference
@@ -1364,8 +1392,8 @@ these things in more detail than I will offer here. It’s a lament that
 it’s never just “do this and you’re done” thing; it’s always a “fuck
 around and see what you find” thing. However, the “classic” standard
 error corrections are so-called “Huber-White” standard errors and are
-often known by the acronym “HC0”. The suggest defaults you often see in
-software for “robust” standard errors are type “HC3”, based on this
+often known by the acronym “HC0”. The suggested defaults you often see
+in software for “robust” standard errors are type “HC3”, based on this
 offering from [Mackinnon and White
 (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
 I can’t really say this with 100% certainty (because you won’t know
@@ -1382,7 +1410,7 @@ rather than have some software bundle do it for you, and I have guides
 on previous course websites and on my blog that show you how to do this.
 However, we’ll keep it simple and focus on some convenience functions
 because they also illustrate the myriad options you have. Let’s focus on
-just two. The first, the simple bootstrap pionereed by Bradley Efron,
+just two. The first, the simple bootstrap pioneered by Bradley Efron,
 resamples *with replacement* from the data and re-runs the model some
 number of times. In expectation, the mean coefficients of these
 re-estimated models converge on what it is in the offending model (which
@@ -1462,13 +1490,12 @@ modelsummary(list("log(LER)" = M2,
                          vcovBS(M2),
                          vcovBS(M2, type='residual')),
              gof_map = c("nobs", "adj.r.squared"),
-             title = "State Performance in War with Adjustments for Heteroskedasticity. Hi Mom!",
+             title = "Hi Mom! Last time, I promise.",
              stars = TRUE)
 ```
 
 <table style="width:95%;">
-<caption>State Performance in War with Adjustments for
-Heteroskedasticity. Hi Mom!</caption>
+<caption>Hi Mom! Last time, I promise.</caption>
 <colgroup>
 <col style="width: 18%" />
 <col style="width: 12%" />
@@ -1643,6 +1670,7 @@ Heteroskedasticity. Hi Mom!</caption>
 </tfoot>
 &#10;</table>
 
+Hi Mom! Last time, I promise.
 
 The summary here suggests that we have heteroskedastic errors, and what
 we elect to do about it—or even if we elect to do anything about it—have
