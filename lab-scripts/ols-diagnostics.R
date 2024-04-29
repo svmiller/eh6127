@@ -20,7 +20,8 @@ knitr::opts_chunk$set(collapse = TRUE,
                       fig.path = "figs/lab-5/",
                       cache.path = "cache/lab-5/",
                       fig.width = 11,
-                      tab.cap = NULL,
+                      tab.cap = "NULL", warning = FALSE,
+                      fig.cap = NULL,
                       comment = "#>")
 #+
 
@@ -45,16 +46,16 @@ knitr::opts_chunk$set(collapse = TRUE,
 #'
 #' ## R Packages/Data for This Session
 #' 
-#' You should've already installed the R packages for this lab session. `{tidyverse}` will be 
-#' for all things workflow and that's all we'll be using today. `{stevedata}` will have 
-#' data sets and `{stevemisc}` has some assorted helper functions. `{lmtest}` has some
-#' formal diagnostic tests. Do note that `options(warn = -1)` is just going to globally
-#' disable R warnings, which, in this script, will apply to the `linloess_plot()` function.
-#' Be very careful in your use of this global override. I'm going to introduce you as well
-#' to the `{modelsummary}` package too, which you may want to install. It'll make model
-#' comparisons a lot easier.
+#' You should've already installed the R packages for this lab session. 
+#' `{tidyverse}` will be for all things workflow. `{stevedata}` will have data 
+#' sets and `{stevemisc}` has some assorted helper functions. `{lmtest}` has 
+#' some formal diagnostic tests and convenience functions for summarizing 
+#' standard error adjustments done by the `{sandwich}` package. `{modelsummary}`
+#' is awesome and you'll kind of see what it's doing along the way. 
+#' `{stevethemes}` is optional, but I want to use it. I'll offer a nod
+#' to the `{car}` package that is optional, but has a function that does
+#' what `linloess_plot()` does (but better). 
 
-options(warn = -1)
 library(tidyverse)
 library(stevedata)
 library(stevemisc)
@@ -63,6 +64,9 @@ library(lmtest)
 library(sandwich)
 library(modelsummary)
 options("modelsummary_factory_default" = "kableExtra")
+# ^ this is new. Default is now "tinytable", but much of my code is written
+# around `{kableExtra}`. As you develop your skills, you may want to make the
+# pivot to `{modelsummary}`'s default.
 theme_set(theme_steve()) # optional, but I want it...
 
 #' ## The Data We'll Be Using
@@ -97,7 +101,6 @@ theme_set(theme_steve()) # optional, but I want it...
 #' 
 #' [^min]: The fatalities offered by Gibler and Miller (2023, Forthcoming) have
 #' high and low estimates. We'll focus on just the low estimates here.
-# M1 <- lm(jci ~ literacy_ba + s_leperc*s_partydom + turnout, A)
 states_war %>%
   mutate(ler = oppfatalmin/(fatalmin + 1),
          lerprop = oppfatalmin/(fatalmin + oppfatalmin),
@@ -214,8 +217,8 @@ Data %>%
 #' `update()` function in R.
 Data %>% mutate(ln_ler = log(ler + 1)) -> Data
 
-M2 <- update(M1, ln_ler ~ . , na.action=na.exclude)
-M3 <- update(M1, lerprop ~ . , .)
+M2 <- update(M1, ln_ler ~ .)
+M3 <- update(M1, lerprop ~ .)
 
 #' Briefly: this is just updating `M1` to change the two DVs. A dot (`.`) is a
 #' kind of placeholder in R to keep "as is." You can read `~ . , .` as saying
@@ -257,7 +260,7 @@ modelsummary(list("LER" = M1,
 #' of interest and whether this should be a linear model at all. The linear 
 #' model is probably "good enough", and certainly for this purpose.
 
-broom::augment(M2, data=Data) %>%
+broom::augment(M2) %>%
   ggplot(.,aes(.fitted, .resid)) +
   geom_point(pch = 21) +
   geom_hline(yintercept = 0, linetype="dashed", color="red") +
@@ -324,7 +327,7 @@ Data %>%
          ln_milex = log(milex + 1)) -> Data
 
 
-M4 <- lm(log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + 
+M4 <- lm(ln_ler ~ xm_qudsest + I(xm_qudsest^2) + 
            wbgdppc2011est + ln_milex + ln_mindur + cinc,
          Data)
 summary(M4)
@@ -652,10 +655,14 @@ bptest(M2)
 #' more for a re-estimation.
 #' 
 #' An older version of this script showed you how you can do it yourself.
-#' Just have `{stevemisc}` do it for you with the `wls()` function.
+#' Just have `{stevemisc}` do it for you with the `wls()` function. Just be
+#' mindful that the `wls()` function isn't keen on data frames where
+#' observations have NAs. If you have those, and just want to ignore it and 
+#' proceed, you may want to include an `na.action = na.exclude` as an optional
+#' argument in `lm()`. We can cheese that here with an `update()`.
 
 modelsummary(list("log(LER)" = M2,
-                  "WLS" = wls(M2)),
+                  "WLS" = wls(update(M2, na.action=na.exclude))),
              stars = TRUE,
              title = "A Caption for This Table. Hi Mom!",
              gof_map = c("nobs", "adj.r.squared"))
@@ -678,28 +685,36 @@ modelsummary(list("log(LER)" = M2,
 #' 
 #' I mention above that I have an entire blog post that discusses some of these
 #' things in more detail than I will offer here. It's a lament that it's never
-#' just "do this and you're done" thing; it's always "fuck around and see what
+#' just "do this and you're done" thing; it's always a "fuck around and see what
 #' you find" thing. However, the "classic" standard error corrections are 
 #' so-called "Huber-White" standard errors and are often known by the acronym
 #' "HC0". The suggest defaults you often see in software for "robust" standard
 #' errors are type "HC3", based on this offering from 
 #' [Mackinnon and White (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
+#' I can't really say this with 100% certainty (because you won't know until
+#' you can see it for yourself) but it's often the case that older analyses 
+#' that report "robust" standard errors are Huber-White ("HCO") standard 
+#' errors and "heteroskedasticity-robust" standard errors in newer analyses
+#' are HC3 standard errors. That's at least a heuristic I've  picked up from 
+#' my experience.
 #' 
-#' Alternatively, if I were you, I'd bootstrap this bad boy. You likewise have
-#' several options here, and I maintain it's fun/advisable to do the bootstrap
+#' There's another approach, which is 100% I'd do if I were presented the 
+#' opportunity. I'd bootstrap this motherfucker. You likewise have
+#' several options here. I maintain it's fun/advisable to do the bootstrap
 #' yourself rather than have some software bundle do it for you, and I have 
 #' guides on previous course websites and on my blog that show you how to do 
-#' this. Your have myriad options, but I'll focus on just two. The first, the
-#' simple bootstrap pionereed by Bradley Efron, resamples *with replacement* 
-#' from the data and re-runs the model some number of times. In expectation,
-#' the mean coefficients of these re-estimated models converge on what it is
-#' in the offending model (which you would know from central limit theorem). 
-#' However, the *standard deviation of the coefficients is your bootstrapped
-#' standard error*. Another popular approach is a bootstrapped model from the 
-#' residuals. Sometimes called a “Bayesian” or “fractional” bootstrap, this 
-#' approach had its hot girl summer on Twitter two or three years ago and leaves 
-#' the regressors at their fixed values and resamples the residuals and adds 
-#' them to the response variable. 
+#' this. However, we'll keep it simple and focus on some convenience functions
+#' because they also illustrate the myriad options you have. Let's focus on
+#' just two. The first, the simple bootstrap pionereed by Bradley Efron, 
+#' resamples *with replacement*  from the data and re-runs the model some 
+#' number of times. In expectation, the mean coefficients of these re-estimated 
+#' models converge on what it is in the offending model (which you would know 
+#' from central limit theorem). However, the *standard deviation of the 
+#' coefficients is your bootstrapped standard error*. Another popular approach 
+#' is a bootstrapped model from the residuals. Sometimes called a “Bayesian” or 
+#' “fractional” bootstrap, this approach had its hot girl summer on Twitter two 
+#' or three years ago and leaves the regressors at their fixed values, 
+#' resamples the residuals, and adds them to the response variable. 
 #' 
 #' If you wanted to do any one of these in isolation, you'd want to leverage
 #' the `coeftest()` function in `{lmtest}` with the assorted mechanisms for
@@ -721,18 +736,18 @@ coeftest(M2) # compare to what M2 actually is.
 #' heteroskedastic standard errors. The other significant coefficients are still
 #' significant, but less precise.
 #' 
-#' #' FYI, `{modelsummary}` appears to be able to do this as well. In this 
-#' function, notice that the "Bootstrap" model is just `M1`. We are using the `vcov` argument here to bootstrap for us. This
-#' should work provided you have `{sandwich}` installed.
+#' FYI, `{modelsummary}` appears to be able to do this as well. In this 
+#' function, notice what the `vcov` argument is doing and the order in which
+#' it is doing it.
 
 modelsummary(list("log(LER)" = M2,
-                  "WLS" = wls(M2),
+                  "WLS" = wls(update(M2, na.action=na.exclude)),
                   "HC0" = M2,
                   "HC3" = M2,
                   "Bootstrap" = M2,
                   "Resid. Boot." = M2),
              vcov = list(vcovHC(M2,type='const'),
-                         vcovHC(wls(M2)),
+                         vcovHC(wls(update(M2, na.action=na.exclude))),
                          vcovHC(M2,type='HC0'),
                          vcovHC(M2, type='HC3'),
                          vcovBS(M2),
@@ -742,7 +757,7 @@ modelsummary(list("log(LER)" = M2,
              stars = TRUE)
 
 #' The summary here suggests that we have heteroskedastic errors, and what we
-#' elect to do abou it---or even if we elect to do anything about it---have 
+#' elect to do about it---or even if we elect to do anything about it---have 
 #' implications for the inferences we'd like to report. No matter, the 
 #' "solution" to heteroskedastic standard errors are more "solutions", multiple, 
 #' and involve doing robustness tests on your original model to see how 

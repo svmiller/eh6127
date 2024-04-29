@@ -40,25 +40,23 @@ trying to tell you.
 ## R Packages/Data for This Session
 
 You should’ve already installed the R packages for this lab session.
-`{tidyverse}` will be for all things workflow and that’s all we’ll be
-using today. `{stevedata}` will have data sets and `{stevemisc}` has
-some assorted helper functions. `{lmtest}` has some formal diagnostic
-tests. Do note that `options(warn = -1)` is just going to globally
-disable R warnings, which, in this script, will apply to the
-`linloess_plot()` function. Be very careful in your use of this global
-override. I’m going to introduce you as well to the `{modelsummary}`
-package too, which you may want to install. It’ll make model comparisons
-a lot easier.
+`{tidyverse}` will be for all things workflow. `{stevedata}` will have
+data sets and `{stevemisc}` has some assorted helper functions.
+`{lmtest}` has some formal diagnostic tests and convenience functions
+for summarizing standard error adjustments done by the `{sandwich}`
+package. `{modelsummary}` is awesome and you’ll kind of see what it’s
+doing along the way. `{stevethemes}` is optional, but I want to use it.
+I’ll offer a nod to the `{car}` package that is optional, but has a
+function that does what `linloess_plot()` does (but better).
 
 ``` r
-options(warn = -1)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+#> ✔ ggplot2   3.5.0     ✔ tibble    3.2.1
 #> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.1     
+#> ✔ purrr     1.0.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -87,6 +85,9 @@ library(lmtest)
 library(sandwich)
 library(modelsummary)
 options("modelsummary_factory_default" = "kableExtra")
+# ^ this is new. Default is now "tinytable", but much of my code is written
+# around `{kableExtra}`. As you develop your skills, you may want to make the
+# pivot to `{modelsummary}`'s default.
 theme_set(theme_steve()) # optional, but I want it...
 ```
 
@@ -127,7 +128,6 @@ original participant (often meaning it self-selected into the conflict).
 Otherwise, it will be a 0.
 
 ``` r
-# M1 <- lm(jci ~ literacy_ba + s_leperc*s_partydom + turnout, A)
 states_war %>%
   mutate(ler = oppfatalmin/(fatalmin + 1),
          lerprop = oppfatalmin/(fatalmin + oppfatalmin),
@@ -321,8 +321,8 @@ well to flex with the `update()` function in R.
 ``` r
 Data %>% mutate(ln_ler = log(ler + 1)) -> Data
 
-M2 <- update(M1, ln_ler ~ . , na.action=na.exclude)
-M3 <- update(M1, lerprop ~ . , .)
+M2 <- update(M1, ln_ler ~ .)
+M3 <- update(M1, lerprop ~ .)
 ```
 
 Briefly: this is just updating `M1` to change the two DVs. A dot (`.`)
@@ -471,19 +471,19 @@ modelsummary(list("LER" = M1,
 <tr class="even">
 <td>AIC</td>
 <td>3374.9</td>
-<td></td>
+<td>689.1</td>
 <td>-7.8</td>
 </tr>
 <tr class="odd">
 <td>BIC</td>
 <td>3403.1</td>
-<td></td>
+<td>717.3</td>
 <td>20.2</td>
 </tr>
 <tr class="even">
 <td>Log.Lik.</td>
 <td>-1679.454</td>
-<td></td>
+<td>-336.530</td>
 <td>11.907</td>
 </tr>
 <tr class="odd">
@@ -516,7 +516,7 @@ more reason to believe the third model is the less offensive of the
 two.[^2] Let’s get our fitted-residual plot.
 
 ``` r
-broom::augment(M2, data=Data) %>%
+broom::augment(M2) %>%
   ggplot(.,aes(.fitted, .resid)) +
   geom_point(pch = 21) +
   geom_hline(yintercept = 0, linetype="dashed", color="red") +
@@ -612,13 +612,13 @@ Data %>%
          ln_milex = log(milex + 1)) -> Data
 
 
-M4 <- lm(log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + 
+M4 <- lm(ln_ler ~ xm_qudsest + I(xm_qudsest^2) + 
            wbgdppc2011est + ln_milex + ln_mindur + cinc,
          Data)
 summary(M4)
 #> 
 #> Call:
-#> lm(formula = log(ler + 1) ~ xm_qudsest + I(xm_qudsest^2) + wbgdppc2011est + 
+#> lm(formula = ln_ler ~ xm_qudsest + I(xm_qudsest^2) + wbgdppc2011est + 
 #>     ln_milex + ln_mindur + cinc, data = Data)
 #> 
 #> Residuals:
@@ -649,7 +649,7 @@ I don’t think it’s going to be an issue, but now I’m curious…
 summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
 #> 
 #> Call:
-#> lm(formula = log(ler + 1) ~ xm_qudsest + wbgdppc2011est + ln_milex + 
+#> lm(formula = ln_ler ~ xm_qudsest + wbgdppc2011est + ln_milex + 
 #>     ln_mindur + cinc, data = subset(Data, povdum == 1))
 #> 
 #> Residuals:
@@ -938,12 +938,27 @@ modelsummary(list("log(LER + 1)" = M2,
 <td>0.247</td>
 </tr>
 <tr class="even">
+<td>AIC</td>
+<td>689.1</td>
+<td>683.3</td>
+</tr>
+<tr class="odd">
+<td>BIC</td>
+<td>717.3</td>
+<td>722.2</td>
+</tr>
+<tr class="even">
+<td>Log.Lik.</td>
+<td>-336.530</td>
+<td>-330.669</td>
+</tr>
+<tr class="odd">
 <td>RMSE</td>
 <td>0.92</td>
 <td>0.90</td>
 </tr>
 </tbody><tfoot>
-<tr class="odd">
+<tr class="even">
 <td colspan="3"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
@@ -1208,11 +1223,15 @@ those values. Finally, apply those as weights in the linear model once
 more for a re-estimation.
 
 An older version of this script showed you how you can do it yourself.
-Just have `{stevemisc}` do it for you with the `wls()` function.
+Just have `{stevemisc}` do it for you with the `wls()` function. Just be
+mindful that the `wls()` function isn’t keen on data frames where
+observations have NAs. If you have those, and just want to ignore it and
+proceed, you may want to include an `na.action = na.exclude` as an
+optional argument in `lm()`. We can cheese that here with an `update()`.
 
 ``` r
 modelsummary(list("log(LER)" = M2,
-                  "WLS" = wls(M2)),
+                  "WLS" = wls(update(M2, na.action=na.exclude))),
              stars = TRUE,
              title = "A Caption for This Table. Hi Mom!",
              gof_map = c("nobs", "adj.r.squared"))
@@ -1322,6 +1341,7 @@ modelsummary(list("log(LER)" = M2,
 </tfoot>
 &#10;</table>
 
+
 Re-estimating the model by way of weighted least squares reveals some
 interesting changes, leaving open the possibility that any inference
 we’d like to report for the democracy variable, the initiator variable,
@@ -1341,20 +1361,28 @@ to adjust for this. This would make the standard errors “robust.”
 
 I mention above that I have an entire blog post that discusses some of
 these things in more detail than I will offer here. It’s a lament that
-it’s never just “do this and you’re done” thing; it’s always “fuck
+it’s never just “do this and you’re done” thing; it’s always a “fuck
 around and see what you find” thing. However, the “classic” standard
 error corrections are so-called “Huber-White” standard errors and are
 often known by the acronym “HC0”. The suggest defaults you often see in
 software for “robust” standard errors are type “HC3”, based on this
 offering from [Mackinnon and White
 (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
+I can’t really say this with 100% certainty (because you won’t know
+until you can see it for yourself) but it’s often the case that older
+analyses that report “robust” standard errors are Huber-White (“HCO”)
+standard errors and “heteroskedasticity-robust” standard errors in newer
+analyses are HC3 standard errors. That’s at least a heuristic I’ve
+picked up from my experience.
 
-Alternatively, if I were you, I’d bootstrap this bad boy. You likewise
-have several options here, and I maintain it’s fun/advisable to do the
-bootstrap yourself rather than have some software bundle do it for you,
-and I have guides on previous course websites and on my blog that show
-you how to do this. Your have myriad options, but I’ll focus on just
-two. The first, the simple bootstrap pionereed by Bradley Efron,
+There’s another approach, which is 100% I’d do if I were presented the
+opportunity. I’d bootstrap this motherfucker. You likewise have several
+options here. I maintain it’s fun/advisable to do the bootstrap yourself
+rather than have some software bundle do it for you, and I have guides
+on previous course websites and on my blog that show you how to do this.
+However, we’ll keep it simple and focus on some convenience functions
+because they also illustrate the myriad options you have. Let’s focus on
+just two. The first, the simple bootstrap pionereed by Bradley Efron,
 resamples *with replacement* from the data and re-runs the model some
 number of times. In expectation, the mean coefficients of these
 re-estimated models converge on what it is in the offending model (which
@@ -1363,8 +1391,8 @@ deviation of the coefficients is your bootstrapped standard error*.
 Another popular approach is a bootstrapped model from the residuals.
 Sometimes called a “Bayesian” or “fractional” bootstrap, this approach
 had its hot girl summer on Twitter two or three years ago and leaves the
-regressors at their fixed values and resamples the residuals and adds
-them to the response variable.
+regressors at their fixed values, resamples the residuals, and adds them
+to the response variable.
 
 If you wanted to do any one of these in isolation, you’d want to
 leverage the `coeftest()` function in `{lmtest}` with the assorted
@@ -1416,20 +1444,19 @@ military expenditures that would not be discerned in the model with
 heteroskedastic standard errors. The other significant coefficients are
 still significant, but less precise.
 
-\#’ FYI, `{modelsummary}` appears to be able to do this as well. In this
-function, notice that the “Bootstrap” model is just `M1`. We are using
-the `vcov` argument here to bootstrap for us. This should work provided
-you have `{sandwich}` installed.
+FYI, `{modelsummary}` appears to be able to do this as well. In this
+function, notice what the `vcov` argument is doing and the order in
+which it is doing it.
 
 ``` r
 modelsummary(list("log(LER)" = M2,
-                  "WLS" = wls(M2),
+                  "WLS" = wls(update(M2, na.action=na.exclude)),
                   "HC0" = M2,
                   "HC3" = M2,
                   "Bootstrap" = M2,
                   "Resid. Boot." = M2),
              vcov = list(vcovHC(M2,type='const'),
-                         vcovHC(wls(M2)),
+                         vcovHC(wls(update(M2, na.action=na.exclude))),
                          vcovHC(M2,type='HC0'),
                          vcovHC(M2, type='HC3'),
                          vcovBS(M2),
