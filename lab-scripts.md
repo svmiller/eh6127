@@ -15,7 +15,7 @@ This page contains link to lab scripts throughout the course. Clicking the title
 <strong>tl;dr:</strong> {{ lectures.tldr }}</span>
 <strong style="font-family: 'Titillium Web', sans-serif; padding-right: .5em">
 <br />
-<a href="https://github.com/{{ site.githubdir}}/tree/master/lab-scripts/{{ lectures.filename}}.R"><i class="fab fa-r-project"></i></a>&nbsp;&nbsp;
+<a href="https://github.com/{{ site.githubdir}}/tree/master/lab-scripts/{{ lectures.rscript}}.R"><i class="fab fa-r-project"></i></a>&nbsp;&nbsp;
 <a href="{{ site.url }}/lab-scripts/{{ lectures.filename }}"><i class="fas fa-file-code"></i></a>
 </strong> 
       </li>

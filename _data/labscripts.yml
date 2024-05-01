@@ -1,21 +1,26 @@
 - title: "An Intro to R, Rstudio, and {tidyverse}"
   filename: lab-1
+  rscript: "intro-r-rstudio"
   tldr: "A {tidyverse}-oriented lab for introducing students to R and Rstudio."
 
 - title: "Some Basics of Descriptive Inference"
   filename: lab-2
+  rscript: "descriptive-inference"
   tldr: "A lab session on things like modes, medians, means, variable types, and recoding things."
 
 - title: "The Bivariate Linear Model"
   filename: lab-3
+  rscript: "bivariate-ols"
   tldr: "We start a discussion of linear regression in the simple case of two variables."
   
 - title: "Extending the Linear Model"
   filename: lab-4
+  rscript: "extending-ols"
   tldr: "Multiple regression is just OLS with more stuff glued onto it, but be mindful about what you're doing when interacting things."
 
 - title: "Linear Model Diagnostics (and What to Do if You Flunk One)"
   filename: lab-5
+  rscript: "ols-diagnostics"
   tldr: "OLS has assumptions, and you should perform various diagnostic tests on them to see if you have any issues. If there are issues, there are assorted things you can do (depending on the problem)."
 
 # - title: "Associational and Inferential Techniques"

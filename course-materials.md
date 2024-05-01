@@ -27,7 +27,7 @@ The decision on required books are made months in advance of the actual semester
 I want to add a few *recommended* books the students may find useful, at least because I found them incredibly useful myself. I highly recommend [the Gelman and Hill (2007) book](https://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Analytical/dp/B00QAV71GO) in particular. I owe much to this book (and my own stubborn persistence in teaching myself quantitative methods) even if much of the implementation they offer looks dated relative to recent advances in `R` (see also: [Gelman et al., 2020](https://www.cambridge.org/core/books/regression-and-other-stories/DD20DD6C9057118581076E54E40C372C)). I also strongly recommend reading the [Ziliak and McCloskey (2008)](https://www.amazon.com/Cult-Statistical-Significance-Economics-Cognition/dp/0472050079) book to better appreciate what quantitative methods cannot tell us and how easy it is to misinterpret what these methods are doing for us as researchers. Interested students should first look at these books at the library or on Google Preview and decide if they'd like to learn from these. I have e-versions of almost all these books that I can share as well.
 
 
-## R and Rstudio
+## R and RStudio
 
 Lab sessions and problem sets (more in the next section) will all be done in the `R` programming language. Students should download this free software programming language at [cran.r-project.org](http://cran.r-project.org) and install it on their personal computer. Binaries are available for Windows and Mac (even Linux, if that is the weapon of choice for the student).
 
@@ -35,7 +35,7 @@ Lab sessions and problem sets (more in the next section) will all be done in the
 
 - I *strongly* encourage students to contact me to learn about the language. I will assume that not discussing `R` with me means the student is fluent with the software.
 
-- Consider getting a graphical user interface (GUI) front-end for `R` to learn it better. I recommend RStudio, available for free at [`posit.co`](https://posit.co/download/rstudio-desktop/). Do note there is a paid option of Rstudio that you *do **not** want.* The paid version is for servers. You want the basic open source integrated development environment (IDE). *This is **free***. Do not pay for anything related to R or Rstudio since you do not need whatever product is available for purchase.
+- Consider getting a graphical user interface (GUI) front-end for `R` to learn it better. I recommend RStudio, available for free at [`posit.co`](https://posit.co/download/rstudio-desktop/). Do note there is a paid option of RStudio that you *do **not** want.* The paid version is for servers. You want the basic open source integrated development environment (IDE). *This is **free***. Do not pay for anything related to R or Rstudio since you do not need whatever product is available for purchase.
 
 
 I published a [beginner's guide to using `R`](http://svmiller.com/blog/2014/08/a-beginners-guide-to-using-r/) in 2014 when I first started to teach courses that forced students to use the `R` programming language. I have since streamlined the `R` requirements for this class, making that guide somewhat dated. You will need to install the following packages, which I illustrate here with the `R` commands to install them. 
