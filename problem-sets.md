@@ -1,28 +1,9 @@
 ---
 layout: page
-title: Lab Scripts
-permalink: /lab-scripts/
+title: Problem Sets
+permalink: /problem-sets/
 ---
 
-This page contains link to lab scripts throughout the course. Clicking the title of the lab script will go directly to the ["spun"](https://deanattali.com/2015/03/24/knitrs-best-hidden-gem-spin/) HTML document from the underlying R code. The bottom left icons link to the underlying R script (<i class="fab fa-r-project"></i>) and the HTML document (<i class="fas fa-file-code"></i>).
-
-
-<ul id="archive">
-{% for lectures in site.data.labscripts %}
-      <li class="archiveposturl">
-        <span><a href="{{ site.url }}/lab-scripts/{{ lectures.filename }}">{{ lectures.title }}</a></span><br>
-<span class = "postlower">
-<strong>tl;dr:</strong> {{ lectures.tldr }}</span>
-<strong style="font-family: 'Titillium Web', sans-serif; padding-right: .5em">
-<br />
-<a href="https://github.com/{{ site.githubdir}}/tree/master/lab-scripts/{{ lectures.filename}}.R"><i class="fab fa-r-project"></i></a>&nbsp;&nbsp;
-<a href="{{ site.url }}/lab-scripts/{{ lectures.filename }}"><i class="fas fa-file-code"></i></a>
-</strong> 
-      </li>
-{% endfor %}
-</ul>
-
-## Problem Sets
 
 Here are the five problem sets you'll need to complete through the semester. Observe the deadlines for these problem sets in the syllabus, as they typically coincide with a little over 24 hours from the relevant lab session.
 
