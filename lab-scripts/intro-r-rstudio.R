@@ -42,15 +42,15 @@ knitr::opts_chunk$set(collapse = TRUE,
 #' 
 #' 
 #' 
-#' ## Configure Rstudio
+#' ## Configure RStudio
 #' 
 #' When you're opening R for the very first time, it'll be useful to just get a general sense of what's happening.
 #' I have [a beginner's guide that I wrote in 2014](http://svmiller.com/blog/2014/08/a-beginners-guide-to-using-r/) 
-#' (where did the time go!). Notice that I built it around [Rstudio](https://rstudio.com/products/rstudio/), 
-#' which you should download as well. Rstudio desktop is free. 
+#' (where did the time go!). Notice that I built it around [RStudio](https://rstudio.com/products/rstudio/), 
+#' which you should download as well. RStudio desktop is free. 
 #' Don't pay for a "pro" version.  You're not running a server. You won't need it. 
 #' 
-#' When you download and install Rstudio *on top* of R, you should customize it 
+#' When you download and install RStudio *on top* of R, you should customize it 
 #' just a tiny bit to make the most of the graphical user interface. To do what 
 #' I recommend doing, select "Tools" in the menu. Scroll to "global options" 
 #' (which should be at the bottom). On the pop-up, select "pane layout." 
@@ -63,7 +63,7 @@ knitr::opts_chunk$set(collapse = TRUE,
 #' space in RStudio. The other pane (environment/history, Git, etc.) is stuff 
 #' you can either learn to not need (e.g. what's in the environment) or will 
 #' only situationally need at an advanced level (e.g. Git information). Minimize 
-#' that outright. When you're in Rstudio, much of what you'll be doing leans on 
+#' that outright. When you're in RStudio, much of what you'll be doing leans on 
 #' the script window and the console window. You'll occasionally be using the 
 #' file browser and plot panes as well.
 #' 
@@ -164,7 +164,7 @@ d <- pi # you can assign one built-in object to a new object.
 #' First, take inventory of what version of R you have (for the university's computer labs, it should be 
 #' 4.0.5). [Go to this website](https://cran.r-project.org/bin/windows/Rtools/) and download the 
 #' version of Rtools that corresponds with the version of R you have. Just click through all the default
-#' options so that it can install. Next, in Rstudio, open a new blank file and copy-paste the following code
+#' options so that it can install. Next, in RStudio, open a new blank file and copy-paste the following code
 #' into it.
 #' 
 # PATH="${RTOOLS40_HOME}\usr\bin;${PATH}"
@@ -172,8 +172,8 @@ d <- pi # you can assign one built-in object to a new object.
 #' I'll add the caveat that you should remove the hashtag and space preceding that line.
 #' 
 #' Next, save the file as `.Renviron` in your default working directory, which is probably where you are
-#' if you are using Rstudio for the first time. The save prompt from Rstudio will advise you that this is 
-#' no longer an `.R` file (and, duh, just tell it to save anyway). Afterwards, restart Rstudio and try
+#' if you are using RStudio for the first time. The save prompt from RStudio will advise you that this is 
+#' no longer an `.R` file (and, duh, just tell it to save anyway). Afterwards, restart RStudio and try
 #' again. This *should* fix it, based on my recent trial run in the university's computer labs.
 #' 
 #' For you Linux users: you're awesome, have great hair, everyone likes you, and 
@@ -196,7 +196,7 @@ d <- pi # you can assign one built-in object to a new object.
 #' Once they're all installed, you can load the libraries with the `library()` command. 
 #' Of note: you only need to install a package once, but you'll need to load the library 
 #' for each R session. You won't really need to load `{stevetemplates}` for anything since
-#' it's core functionality is its integration with Rstudio. Let's load `{tidyverse}` and
+#' it's core functionality is its integration with RStudio. Let's load `{tidyverse}` and
 #' `{stevedata}` in this session, since it's what I'll typically use.
 #' 
 library(tidyverse)
@@ -257,7 +257,7 @@ Apply
 #' you should know to do basically anything in R. These are so-called "tidy" verbs. We'll be using
 #' some data available in `{stevedata}`. This is the `pwt_sample` data, which includes yearly
 #' economic data for a handful of rich countries that are drawn from version 10.0 of the Penn
-#' World Table. If you're in Rstudio, you can learn more about these data by typing the following
+#' World Table. If you're in RStudio, you can learn more about these data by typing the following
 #' command.
 
 ?pwt_sample
