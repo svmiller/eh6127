@@ -1,5 +1,5 @@
 #' ---
-#' title: "An Intro to R, Rstudio, and {tidyverse}"
+#' title: "An Intro to R, RStudio, and {tidyverse}"
 #' layout: lab
 #' permalink: /lab-scripts/lab-1/
 #' active: lab-scripts
