@@ -6,3 +6,6 @@ _private
 _site
 _materials
 .jekyll-cache
+!.gitignore
+.sass-cache
+_dross
