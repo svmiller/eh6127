@@ -1,0 +1,528 @@
+---
+output: 
+  stevetemplates::beamer:
+    latex_engine: xelatex # use xelatex here instead! I recommend it, but this is minimal reprex
+    dev: cairo_pdf # I typically comment this out  if latex_engine: pdflatex
+    slide_level: 3 # I prefer this, but I won't force it on you.
+    theme: metropolis
+title: "Extending the Linear Model: Fixed Effects, Controls, and Interactions"
+subtitle: EH6127 -- Quantitative Methods
+author: Steven V. Miller
+institute: Department of Economic History and International Relations
+titlegraphic: "`r paste0(Sys.getenv('HOME'), '/Dropbox/stockholm/su-logotyp.png')`"
+titlegraphshift: "\\vspace{6cm}"
+make149: true
+mainfont: "Open Sans Light"
+titlefont: "Titillium Web"
+fontsize: 10pt
+header-includes:
+- \usepackage{dcolumn}
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+---
+
+```{r setup, include=FALSE, cache=F, message=F, warning=F, results="hide"}
+knitr::opts_chunk$set(cache=TRUE, warning=F, message=F)
+knitr::opts_chunk$set(fig.path='figs/',  fig.width=14, fig.height=8.5)
+knitr::opts_chunk$set(cache.path='cache/')
+
+knitr::opts_chunk$set(
+                  fig.process = function(x) {
+                      x2 = sub('-\\d+([.][a-z]+)$', '\\1', x)
+                      if (file.rename(x, x2)) x2 else x
+                      }
+                  )
+```
+
+```{r loaddata, echo=F, eval=T, message=F, warning=F}
+
+library(tidyverse)
+library(stevemisc)
+library(stevedata)
+library(stevethemes)
+library(stargazer)
+library(ggdist)
+library(modelsummary)
+library(kableExtra)
+library(simqi)
+library(modelr)
+
+
+
+eurostat_codes %>% 
+  #filter(cat == "EU" | iso2c == "UK" | cat == "EFTA") %>% 
+  pull(iso2c) -> isocodes_we_want
+
+wbd_example %>% na.omit %>%
+  filter(year == 2020)  %>% 
+  filter(iso2c %in% isocodes_we_want) %>%
+  left_join(., eurostat_codes %>% select(iso2c, cat)) %>%
+  filter(cat != "OEC") %>%
+  mutate(cat = ifelse(cat %in% c("PC", "EUCC"), "CC", cat)) %>%
+  mutate(enpe = ifelse(cat == "ENP-E", 1, 0)) %>%
+  mutate(catf = forcats::fct_relevel(cat, "EU")) -> Data
+
+
+
+M1 <- lm(lifeexp ~ enpe, Data)
+M2 <- lm(lifeexp ~ catf, Data)
+M3 <- lm(lifeexp ~ hci + rgdppc + catf, Data)
+
+M1df <-broom::tidy(M1)
+M2df <-broom::tidy(M2)
+M3df <-broom::tidy(M3)
+
+som_sample %>%
+  mutate(interest = ifelse(interestp %in% c(1,2), 0, 1),
+         ideo0 = ideo - 1) -> som_sample
+
+M4 <- lm(lptrust ~ interest*ideo0, som_sample)
+
+M4df <-broom::tidy(M4)
+
+som_sample %>%
+  data_grid(.model = M4,
+            ideo0 = unique(ideo0),
+            interest = unique(interest))  -> pred_grid
+
+pred_grid %>%
+  mutate(pred = predict(M4, newdata=pred_grid)) -> pred_grid
+
+options("modelsummary_format_numeric_latex" = "plain")
+options(knitr.kable.NA = '')
+```
+
+# Introduction
+### Goal for Today
+
+*Add some wrinkles to the OLS regression framework.*
+
+### Introduction
+
+By this point, I think you could be doing your own research.
+
+- You know what variables are.
+- You know how to describe them.
+- You know how to propose an explanation for variations in them.
+- You know how to set up a research design to test an argument.
+- You even know how to interpret a regression coefficient!
+
+### Limitations in Bivariate Regression
+
+However, simple bivariate OLS is never enough.
+
+- Variables of interest in political science are rarely interval.
+- Bivariate regression does not control for confounders.
+
+This lecture will deal with those topics accordingly.
+
+
+# Extending OLS
+## Dummy Variables as Predictors
+### Dummy Variables as Predictors
+
+Dummy variables are everywhere in applied social science.
+
+- They play an important role in "fixed effects" regression.
+- Sometimes we're just interested in the effect of "one thing".
+
+### Eurostat Categories and Life Expectancy
+
+Return to our life expectancy example: what if we're just interested in categorical difference, by Eurostat category?
+
+- Categories: EU (e.g. Sweden), EFTA (e.g. Norway), UK (i.e. those guys), EUCC (e.g. BiH), PC (i.e. Kosovo, Georgia), ENP-E (i.e. AM, BY, AZ), ENP-S (e.g. Algeria), OEC (i.e. Russia)
+- Let's make this somewhat honest and drop the UK and Russia and combine the PC and EUCC countries.
+
+###
+
+```{r, echo=F}
+Data %>%
+  mutate(lbl = case_when(
+    cat == "EUCC" ~ "EU\nCandidate\nCountry",
+    cat == "ENP-E" ~ "ENP\n(East)",
+    cat == "ENP-S" ~ "ENP\n(South)",
+    cat == "EU" ~ "EU",
+    cat == "PC" ~ "Potential Candidate",
+    cat == "CC" ~ "Candidate\nCountries",
+    cat == "EFTA" ~ "EU\nFree Trade\nCountry"
+  )) %>%# distinct(cat, lbl)
+  arrange(desc(lbl)) %>%
+  mutate(lbl = fct_inorder(lbl)) %>%
+  ggplot(.,aes(lbl, lifeexp)) +
+  theme_steve() +
+  coord_flip() +
+  stat_pointinterval() +
+  theme(axis.text.y= element_text(hjust=.5))+
+    labs(y = "Life Expectancy in 2020",
+         x = "",
+         caption = "Data: ?wbd_example in {stevedata} by way of World Bank",
+         title = "The Distribution of Life Expectancy in 2020, by Eurostat Category",
+         subtitle = "The largest categorical differences seem to focus on the ENP-E countries as well as the free trade countries.")
+```
+
+
+### Eurostat Categories and Life Expectancy
+
+Let's look at two things here:
+
+1. A comparison of the ENP-E to the rest of the data.
+2. A full comparison among categories.
+
+###
+
+```{r m1, echo=F, eval=T, results="asis"}
+
+#library(modelsummary)
+modelsummary(list("Model 1" = M1), #output="latex",
+             title = "The Correlates of Life Expectancy for Eurostat Category States, 2020",
+             stars = TRUE, 
+             gof_omit = "IC|F|Log.|R2$|RMSE",
+             coef_map = c("enpe" = "ENP (East)",
+                          "(Intercept)" = "Intercept"),
+             align = "lc") %>%
+  row_spec(0, bold=TRUE)
+```
+
+### Life Expectancy and the ENP-East
+
+- The estimated life expectancy in other Eurostat category states is `r round(M1df$estimate[1], 2)`
+- The estimated life expectancy in ENP-East states is `r round(M1df$estimate[1] + M1df$estimate[2], 2)` 
+- The "ENP-East effect" is an estimated `r round(M1df$estimate[2], 2)` (s.e.: `r round(M1df$std.error[2], 2)`).
+- *t*-statistic: `r round(M1df$estimate[2], 2)`/`r round(M1df$std.error[2], 2)` = `r round(M1df$statistic[2], 2)`
+
+We can rule out, with high confidence, an argument that being an ENP-East state has no effect on life expectancy.
+
+- Our findings suggest a precise negative effect.
+
+### What About Other Variation?
+
+Obviously, this last regression isn't that informative.
+
+- The baseline category is quite heterogeneous.
+- It's impressive to pick up 17% of the variation with alone, though.
+
+We can specify other categories as "fixed effects".
+
+- These treat predictors as a series of dummy variables for each value of *x*.
+- One predictor (or group) is left out as "baseline category".
+	- Otherwise, we'd have no *y*-intercept.
+
+###
+
+```{r m3, echo=F, eval=T, results="asis"}
+
+modelsummary(list("Model 1" = M1,
+                  "Model 2" = M2),
+             #output="latex",
+             title = "The Correlates of Life Expectancy for Eurostat Category States, 2020",
+             stars = TRUE, 
+             gof_omit = "IC|F|Log.|R2$|RMSE",
+             coef_map = c("enpe" = "ENP (East)",
+                          "catfENP-E" = "ENP (East)",
+                          "catfENP-S" = "ENP (South)",
+                          "catfEFTA" = "EU Free Trade",
+                          "catfCC" = "Candidate Country",
+                          
+                          # "south" = "State is in the South",
+                          # "regionfNortheast" = "Northeast",
+                          # "regionfNorth Central" = "Midwest",
+                          # "regionfWest" = "West",
+                          "(Intercept)" = "Intercept"),
+             align = "lcc") %>%
+  row_spec(0, bold = TRUE) %>% kable_styling(font_size = 9)
+
+
+# stargazer(M3, style="ajps",
+#           omit.stat=c("F","rsq","ser"), header=FALSE,
+#           dep.var.labels.include = FALSE,
+#           covariate.labels=c("Northeast", "Midwest", "West"),
+#           title="The Effect of State Regions on Voter Turnout, 2016")
+```
+
+### Categorical Fixed Effects and Life Expectancy
+
+How to interpret this regression:
+
+- All coefficients communicate the effect of that category versus the baseline category.
+	- I forced this to be the EU for ease of comparison, but default is whatever comes first.
+	- Just be mindful: *everything* is benchmarked to the baseline.
+- Estimated life expectancy in the EU is `r round(M2df$estimate[1], 2)`.
+- Life expectancy in the candidate countries is discernibly lower than the EU (*t* = `r round(M2df$statistic[2], 2)`).
+- Life expectancy in the FTA countries is discernibly higher than the EU (*t* = `r round(M2df$statistic[3], 2)`).
+- Life expectancy in the ENP-East is discernibly lower than the EU (*t* = `r round(M2df$statistic[4], 2)`).
+- Life expectancy in the ENP-South is discernibly lower than the EU (*t* = `r round(M2df$statistic[4], 2)`).
+
+## Multiple Regression
+### Multiple Regression
+
+Your previous example is basically an applied **multiple regression**.
+
+- However, it lacks control variables.
+
+Multiple regression produces **partial regression coefficients**.
+
+### Multiple Regression
+
+Let's return to what we did last time with human capital, but do more. Let:
+
+- $x_1$: human capital score [0:1]
+- $x_2$: real GDP per capita (2015 USD)
+- $x_3$: categorical fixed effects
+
+Important: we do this to "control" for potential confounders.
+
+### The Rationale
+
+Assume you are proposing a novel argument that human capital explains life expectancy. I might argue for omitted variable bias on these grounds:
+
+- You've misspecified "capital"; it's more material than "human".
+- You've missed that some regions "are just different".
+
+In other words, I contend your argument linking human capital (*x*) to life expectancy (*y*) is spurious to these other factors (*z*). 
+
+- That's why you "control." Not to soak up variation but to test for effect of potential confounders.
+
+### 
+
+
+```{r, echo=F, eval=T, results="asis"}
+
+modelsummary(list("Model 1" = M1,
+                  "Model 2" = M2,
+                  "Model 3" = M3),
+             #output="latex",
+             title = "The Correlates of Life Expectancy for Eurostat Category States, 2020",
+             stars = TRUE, 
+             gof_omit = "IC|F|Log.|R2$|RMSE",
+             coef_map = c("hci" = "Human Capital",
+                          "rgdppc" = "Real GDP per Capita",
+                          "enpe" = "ENP (East)",
+                          "catfENP-E" = "ENP (East)",
+                          "catfENP-S" = "ENP (South)",
+                          "catfEFTA" = "EU Free Trade",
+                          "catfCC" = "Candidate Country",
+                          
+                          # "south" = "State is in the South",
+                          # "regionfNortheast" = "Northeast",
+                          # "regionfNorth Central" = "Midwest",
+                          # "regionfWest" = "West",
+                          "(Intercept)" = "Intercept"),
+             align = "lccc") %>%
+  row_spec(0, bold = TRUE) %>% kable_styling(font_size = 7)
+
+
+# stargazer(M3, style="ajps",
+#           omit.stat=c("F","rsq","ser"), header=FALSE,
+#           dep.var.labels.include = FALSE,
+#           covariate.labels=c("Northeast", "Midwest", "West"),
+#           title="The Effect of State Regions on Voter Turnout, 2016")
+```
+
+### Multiple Regression
+
+Estimated life expectancy for EU state with no human capital and no money: `r round(M3df$estimate[1], 2)`
+
+- This parameter is effectively useless, given how you modeled the data.
+- (It's not a problem, though there are advanced tools available to make use of this).
+
+Other takeaways:
+
+- Partial [min-max] effect of human capital:  `r round(M3df$estimate[2], 2)`
+- Partial effect of GDP per capita is positive and significant.
+    - *Don't* read much into coefficient size, only direction and significance.
+    - e.g. a 45,000 USD increase in GDP per capita increases life expectancy by an estimated `r round(M3df$estimate[3]*45000, 2)` years.
+- Partialing out human capital and real GDP per capita, only the ENP differences remain.
+
+## Interactive Effects
+### Interactive Effects
+
+Multiple regression is linear and additive.
+
+- However, some effects (say: $x_1$) may depend on the value of some other variable (say: $x_2$).
+
+In regression, we call this an **interactive effect**.
+
+### A Real World Example
+
+Consider this example: we want to measure political trust in Sweden by ideology.
+
+- *But*, a la Converse (1954) and Zaller (1992), political opinions are filtered through the politically aware.
+- i.e. there's no standalone effect of ideology independent from political engagement.
+
+Let's use 2019/2020 SOM data to evaluate whether there's something to this.
+
+### Our Data
+
+
+**IVs**: ideology, political interest
+
+- Ideology: (0 = "clearly to the left", 4 = "clearly to the right")
+- Political interest: (0 = "not at all interested" or "not particularly interested", 1 = "very/rather interested")
+
+
+### Our Data
+
+**DV**: latent political trust based on various items. Including:
+
+- government
+- parliament
+- political parties
+- Swedish politicians
+
+Emerging estimate has a mean of zero and standard deviation of one.
+
+- Higher values = more political trust
+
+###
+
+```{r hist, echo=F, warning=F}
+ggplot(som_sample, aes(lptrust)) + 
+  geom_density() + 
+  theme_steve() +
+  xlim(-3,3) +
+  labs(title = "Density Plot of Latent Political Trust in Sweden, 2019-2020",
+       subtitle = "The data were generated from a graded response model to have an approximate mean of 0 and standard deviation of 1.",
+       y = "Density", x="Latent Political Trust Score",
+       caption = "Data: SOM (2019-2020). Data available in {simqi}.")
+```
+
+### Interactive Effects
+
+Our regression formula would look like this:
+
+$$
+\hat{y} = \hat{a} + \hat{b_1}(x_1) + \hat{b_2}(x_2) + \hat{b_3}(x_1*x_2)
+$$
+
+where:
+
+- $\hat{y}$ = estimated political trust score.
+- $x_1$ = ideology (0 = "clearly to the left").
+- $x_2$ = political interest (0 = "not at all/not particularly interested").
+- $x_1 * x_2$ = product of the two variables.
+
+### A Caution About Constituent Terms
+
+*Be careful with interpreting regression coefficients for constituent terms of an interaction.*
+
+- The regression coefficient for ideology is effect of increasing ideology when the interest variable = 0 (i.e. low/no-interest).
+- The political interest variable is effect of interest when ideology = 0 (i.e. among the furthest Left).
+
+###
+
+```{r m5, echo=F, eval=T, results="asis"}
+
+modelsummary(list("Model 1" = M4), 
+             #output="latex",
+             title = "A Simple Interaction Between Ideology and Political Interest on Political Trust (SOM, 2019-2020)",
+             stars = TRUE, 
+             gof_map = c("adj.r.squared", "nobs"),
+             coef_map = c("interest" = "Political Interest",
+                          "ideo0" = "Ideology (L to R)",
+                          "interest:ideo0" = "Political Interest*Ideology",
+                          "(Intercept)" = "Intercept"),
+             align = "lc")  %>%
+  row_spec(0, bold = TRUE) %>% 
+  kable_styling(font_size = 9)
+```
+
+### Interactive Effects
+
+How to interpret this table:
+
+- Our estimate of political trust is `r round(M4df$estimate[1], 3)` for the no-interest maximally Left
+-  $\hat{b_1}$, $\hat{b_2}$, and $\hat{b_3}$ are all statistically significant.
+- When $x_1$ and $x_2$ $=$ 1, subtract `r round(M4df$estimate[4], 3)` from $\hat{y}$.
+
+### Interactive Effects
+
+Here's what this does for the maximally Left:
+
+- $\hat{y}$ for low/no-interest Left: `r with(M4df, round(estimate[1], 3))`.
+- $\hat{y}$ for high-interest Left: `r with(M4df, round(estimate[1] + estimate[2]*1, 3))`.
+
+What this does for the maximally Right.
+
+- $\hat{y}$  for low/no-interest Right: `r with(M4df, round(estimate[1] + estimate[3]*4, 3))`.
+- $\hat{y}$  for high-interest Right: `r with(M4df, round(estimate[1] + estimate[3]*4 + estimate[2]*1 + estimate[4]*4, 3))`.
+
+You see a huge effect of political interest on the Left, but a much smaller one on the right.
+
+###
+
+```{r showeffect, echo=F, warning=F}
+
+lil <- with(M4df, round(estimate[1], 3))
+hil <- with(M4df, round(estimate[1] + estimate[2]*1, 3))
+
+lir <- with(M4df, round(estimate[1] + estimate[3]*4, 3))
+hir <- with(M4df, round(estimate[1] + estimate[3]*4 + estimate[2]*1 + estimate[4]*4, 3))
+
+# lkd <- with(M5df, round(estimate[1], 3))
+# hkd <- with(M5df, round(estimate[1] + estimate[3]*1, 3))
+# lkr <- with(M5df, round(estimate[1] + estimate[2]*2, 3))
+# hkr <- with(M5df, round(estimate[1] + estimate[2]*2 + estimate[3]*1 + estimate[4]*2, 3))
+
+
+ggplot(som_sample, aes(lptrust)) + 
+  geom_density() + 
+  theme_steve() +
+  xlim(-3,3) +
+  labs(title = "Density Plot of Latent Political Trust in Sweden, 2019-2020",
+       subtitle = "Notice the effect of political interest is much stronger for the left than right.",
+       y = "Density", x="Latent Political Trust Score",
+       caption = "Data: SOM (2019-2020). Data available in {simqi}.") +
+  geom_segment(x=lil, y=0, xend=lil, yend=.6, color="red") +
+  geom_segment(x=hil, y=0, xend=hil, yend=.6, color="red", linetype="dashed") +
+  geom_segment(x=lir, y=0, xend=lir, yend=.6, color="blue") +
+  geom_segment(x=hir, y=0, xend=hir, yend=.6, color="blue", linetype="dashed") + 
+  geom_segment(x=lil+.01, y=.1, xend=hil-.01, yend=.1, color="red",
+               arrow = arrow(length = unit(0.15, "cm")))
+```
+
+###
+
+```{r, echo=F}
+predict(M4, newdata=pred_grid, interval = "confidence") %>%
+  bind_cols(pred_grid, .) %>%
+  mutate(interest = ifelse(interest == 0, "No Interest", "Interest")) %>%
+  ggplot(.,aes(as.factor(ideo0), fit,
+               ymin = lwr, ymax=upr,
+               color=as.factor(interest), 
+               group=as.factor(interest),
+               fill=as.factor(interest),
+               linetype = as.factor(interest))) + 
+  geom_ribbon(alpha=.4) +
+  geom_line(linewidth=1.1) +
+  scale_x_discrete(labels = c("Clearly to\nthe Left", "Somewhat to\nthe left", 
+                              "Neither left\nnor right", 
+                              "Somewhat to\nthe right",
+                              "Clearly to\nthe Right")) +
+  theme_steve() +
+  labs(x = "Ideology", y = "Predicted Political Trust",
+       subtitle = "Increasing ideology has a stronger effect on trust among those who are politically interested",
+       title = "Predicted Political Trust, by Political Interest and Ideology",
+       linetype = "", color = "", fill="")
+```
+
+# Conclusion
+### Conclusion
+
+- Moving from bivariate OLS to multiple regression isn't really a big to-do.
+    - It just means there are more parameters on the right-hand side of the equation.
+    - What comes back are "partial" associations or regression coefficients.
+    - This is where "ceteris paribus" language emerges.
+- "Fixed effects" as you may encounter them = categorical dummy variables.
+    - Something has to be a baseline, and that's what you're comparing against.
+- Interactions = two (or more) things get multiplied together.
+    - Constituent terms of x1 (x2): effect of x1 (x2) when x2 (x1) is 0.
+    - Be mindful an "insignificant" interactive term may hide something.
+    - Both things really have to have a 0 for the regression coefficients to communicate something.
