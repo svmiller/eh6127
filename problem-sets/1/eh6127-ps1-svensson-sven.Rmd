@@ -11,20 +11,57 @@ library(tidyverse)
 library(stevedata)
 ```
 
+I'm basically going to teach you R Markdown by way of example. I obviously can't do your homework for you, but I can show you what an R Markdown document would look like and how you could use it to make nice documents for you. In the R Markdown document, do you see that above "chunk"? The one titled `setup`. You can load libraries in there and do all sorts of stuff in there as a type of "setup". There are myriad advanced uses, but let's keep it simple and use it to make sure are libraries are loaded and that---for this purpose---each successive code chunk "echoes" (i.e. you see the code generating the result).
 
+Let's look at the `eurostat_codes` data in `{stevedata}`. These are all states that have some kind of formal classification in Eurostat's glossary. Overall, there are `r nrow(eurostat_codes)` rows and `r ncol(eurostat_codes)` columns. Did you see what I did there?
 
-1. There are `r n_distinct(SBCD$country)` countries in the `SBCD` data. Here would be the R code to prove that.
+Maybe we can check how many different "categories" there are in Eurostat's glossary.
 
 ```{r}
-n_distinct(SBCD$country)
-
-# Alternatively...
-
-SBCD %>%
-  distinct(country) %>%
-  nrow(.)
-
+n_distinct(eurostat_codes$cat)
 ```
 
-2. I won't do your homework for you, but I will link you to [a `flygresor.se` jingle](https://www.youtube.com/watch?v=BJj5GoJNREg). Hela Sverige sjunger med! *flyg-, flyg-, flyg, flygresor-punkt-se*!
+Interesting, there are `r n_distinct(eurostat_codes$cat)` distinct categories. What are they? And how many are there, by category?
+
+```{r}
+eurostat_codes %>%
+  count(cat)
+```
+
+Very cool. I can get all sorts of useful summary information from just the `count()` code. Notice `distinct()` does basically the same, but doesn't give me a count.
+
+```{r}
+eurostat_codes %>%
+  distinct(cat)
+```
+
+It doesn't even order them alphabetically. How about this?
+
+```{r}
+eurostat_codes %>%
+  summarize(n = n(),
+            .by = cat)
+```
+
+Neat, another way of doing it. Not quite the same as `count()`. How about this?
+
+```{r}
+eurostat_codes %>%
+  summarize(n = n(),
+            .by = cat) %>%
+  arrange(cat)
+```
+
+Ah, yes, I did the thing, but needed more code to do it. Whatever, at least I see there are multiple ways of doing it.
+
+One last thing, before I go: how might I create identify some "like" countries? For example, where are Armenia, Azerbaijan, and Georgia at?
+
+```{r}
+eurostat_codes %>%
+  filter(iso2c %in% c("AZ", "AM", "GE"))
+```
+
+Interesting. Despite all three being former SSRs from the same basic area, Georgia is a potential candidate and Armenia and Azerbaijan are in the neighborhood.
+
+I won't do your homework for you, but I will link you to [a `flygresor.se` jingle](https://www.youtube.com/watch?v=BJj5GoJNREg). Hela Sverige sjunger med! *flyg-, flyg-, flyg, flygresor-punkt-se*!
 
