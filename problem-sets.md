@@ -5,9 +5,9 @@ permalink: /problem-sets/
 ---
 
 
-Here are the five problem sets you'll need to complete through the semester. Observe the deadlines for these problem sets in the syllabus, as they typically coincide with a little over 24 hours from the relevant lab session.
+Here are the five problem sets you'll need to complete through the course. Observe the deadlines for these problem sets in the course description.
 
-I've attached an answer template for your consideration as well. Download this file (i.e. right-click the link and save): [`eh6105-ps1-svensson-sven.Rmd`](http://eh6105.svmiller.com/problem-sets/1/eh6105-ps1-svensson-sven.Rmd). Open it in Rstudio, take a quick look at its contents, and then press the "Knit" button. In the same directory in which you saved the R Markdown file, there'll be a corresponding Word document. Open that in your Word document reader to see what you did. From there, you might be able to follow your intuition as to what's happening. You can [read more about R Markdown here](https://bookdown.org/yihui/rmarkdown).
+I've attached an answer template for your consideration as well. Download this file (i.e. right-click the link and save): [`eh6127-ps1-svensson-sven.Rmd`](http://eh6127.svmiller.com/problem-sets/1/eh6127-ps1-svensson-sven.Rmd). Open it in Rstudio, take a quick look at its contents, and then press the "Knit" button. In the same directory in which you saved the R Markdown file, there'll be a corresponding Word document. Open that in your Word document reader to see what you did. From there, you might be able to follow your intuition as to what's happening. You can [read more about R Markdown here](https://bookdown.org/yihui/rmarkdown).
 
 <ul id="archive">
 {% for problemsets in site.data.problemsets %}
