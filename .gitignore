@@ -12,3 +12,5 @@ _dross
 cache
 figs
 *.log
+*.Rproj
+final-exam
