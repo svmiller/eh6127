@@ -1,7 +1,7 @@
-- title: "Introduction"
-  filename: introduction
-  dirname: introduction
-  tldr: "An introduction to the course. Install R and Rstudio."
+# - title: "Introduction"
+#   filename: introduction
+#   dirname: introduction
+#   tldr: "An introduction to the course. Install R and Rstudio."
   
 - title: "(Theory and) Research Design"
   filename: theory-research-design
@@ -38,10 +38,10 @@
   dirname: ols-assumptions
   tldr: "OLS has assumptions and you should look into them all for every model you run. Let the LINE mnemonic guide you."
 
-- title: "Causality and Ethics"
+- title: "BONUS: Causality and Ethics"
   filename: causality
   dirname: causality
-  tldr: "We close the semester with a discussion of what is 'causality', what are its (strong) implications, and what are some issues associated with this term and research in general."
+  tldr: "This is a final lecture---cut for time---about 'causality', what are its (strong) implications, and what are some issues associated with this term and research in general. Budget cuts and time restraints mean I can only put this here for you to see. This won't be a lecture."
 
 
 # #- title: "Sample .Rmd File"
