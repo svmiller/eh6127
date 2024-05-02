@@ -9,3 +9,6 @@ _materials
 !.gitignore
 .sass-cache
 _dross
+cache
+figs
+*.log
