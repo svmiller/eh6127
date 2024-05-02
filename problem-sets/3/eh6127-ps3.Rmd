@@ -1,6 +1,6 @@
 ---
 title: "Problem Set #3"
-subtitle: "EH6105 - Quantitative Methods"
+subtitle: "EH6127 - Quantitative Methods"
 author: Steven V. Miller
 output: pdf_document
 
