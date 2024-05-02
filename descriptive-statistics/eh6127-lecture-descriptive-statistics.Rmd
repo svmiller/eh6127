@@ -93,33 +93,33 @@ library(stevedata)
 #   summarize(number = sum(number))
 
 
-readxl::read_excel("/home/steve/Downloads/roster-per-distrikt-slutligt-antal-roster-inklusive-totalt-valdeltagande-regionval-2022.xlsx", sheet = 2) %>%
-  rename(lan = 3,
-         vote = 11) %>%
-  group_by(lan, Parti) %>%
-  summarize(n = sum(vote)) %>%
-  ungroup() -> Blah
-
-Blah %>%
-  ungroup() %>%
-  filter(Parti == "Summa giltiga röster") %>%
-  rename(valid_votes = n) %>%
-  select(lan, valid_votes) %>%
-  left_join(Blah, .) %>%
-  mutate(perc = n/valid_votes) %>%
-  mutate(party = case_when(
-    Parti == "Arbetarepartiet-Socialdemokraterna" ~ "Socialdemokraterna",
-    Parti == "Centerpartiet" ~ "Centerpartiet",
-    Parti == "Liberalerna (tidigare Folkpartiet)" ~ "Liberalerna",
-    Parti == "Miljöpartiet de gröna" ~ "Miljöpartiet de gröna",
-    Parti == "Moderaterna" ~ "Moderaterna",
-    Parti == "Sverigedemokraterna" ~ "Sverigedemokraterna",
-    Parti == "Vänsterpartiet" ~ "Vänsterpartiet",
-    Parti == "Kristdemokraterna" ~ "Kristdemokraterna"
-  )) %>% 
-  #distinct(lan) %>%
-  rename(county = lan) %>%
-  left_join(., sweden_counties) -> Ass
+# readxl::read_excel("/home/steve/Downloads/roster-per-distrikt-slutligt-antal-roster-inklusive-totalt-valdeltagande-regionval-2022.xlsx", sheet = 2) %>%
+#   rename(lan = 3,
+#          vote = 11) %>%
+#   group_by(lan, Parti) %>%
+#   summarize(n = sum(vote)) %>%
+#   ungroup() -> Blah
+# 
+# Blah %>%
+#   ungroup() %>%
+#   filter(Parti == "Summa giltiga röster") %>%
+#   rename(valid_votes = n) %>%
+#   select(lan, valid_votes) %>%
+#   left_join(Blah, .) %>%
+#   mutate(perc = n/valid_votes) %>%
+#   mutate(party = case_when(
+#     Parti == "Arbetarepartiet-Socialdemokraterna" ~ "Socialdemokraterna",
+#     Parti == "Centerpartiet" ~ "Centerpartiet",
+#     Parti == "Liberalerna (tidigare Folkpartiet)" ~ "Liberalerna",
+#     Parti == "Miljöpartiet de gröna" ~ "Miljöpartiet de gröna",
+#     Parti == "Moderaterna" ~ "Moderaterna",
+#     Parti == "Sverigedemokraterna" ~ "Sverigedemokraterna",
+#     Parti == "Vänsterpartiet" ~ "Vänsterpartiet",
+#     Parti == "Kristdemokraterna" ~ "Kristdemokraterna"
+#   )) %>% 
+#   #distinct(lan) %>%
+#   rename(county = lan) %>%
+#   left_join(., sweden_counties) -> Blah
 
 library(qs)
 USA <- qread("~/Dropbox/data/wvs/wvs6wave-20180912.qs") %>% rename_all(tolower) %>%
