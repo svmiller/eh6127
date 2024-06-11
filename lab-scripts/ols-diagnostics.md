@@ -63,11 +63,11 @@ function that does what `linloess_plot()` does (but better).
 ``` r
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.0     ✔ tibble    3.2.1
+#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
 #> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.2     
+#> ✔ purrr     1.0.1     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -110,7 +110,8 @@ also becoming standalone paragraphs in Markdown format. I don’t know
 what that lever is based on my cornball workflow spinning this `.R` file
 to a `.md` file. This is *not* a problem you will have formatting for
 LaTeX or HTML, but it will make for a somewhat clumsy viewing experience
-on the course website.
+on the course website. Again, you’ll be saying hi to my Mom a lot. She
+lives in Ohio.
 
 Okay then, let’s get on with the show.
 
@@ -743,15 +744,26 @@ sense.
 
 Once you know under what conditions that autocorrelation is going to
 happen, you can probably skip this and go right to assorted tricks that
-you know will work given the nature of your serial correlation. If you
-have a random walk time series, you know those can typically be
-first-differenced in order to strip out the source of autocorrelation If
-you have some type of “spatial” serial autocorrelation (e.g. citizens
-nested in countries, students nested in schools), you can employ some
-kind of fixed effects or random effects to outright model the source of
-unit heterogeneity. No matter, the “textbook” tests for these are
-typically in the time series case and involve the Durbin-Watson test or
-the Breusch-Godfrey test.
+you know will work given the nature of your serial correlation. So, this
+is going to be a curious exercise I’m going to have you do here. The
+fundamental grouping effect here is primarily “spatial” or
+cross-sectional (in that it deals with state groupings) but the primary
+tests we teach around this particular assumption are temporal
+(i.e. we’re going to prime you in the advanced level to think about time
+series and panel models). I just want to reiterate this is something you
+should really know in advance about your data, and should assume a
+priori about your data. The primary tests of interest are always geared
+toward temporal attributes of a data set (which, again, you should know
+in advance).
+
+Anywho, if you have a random walk time series, you know those can
+typically be first-differenced in order to strip out the source of
+autocorrelation. If you have some type of “spatial” serial correlation
+(e.g. citizens nested in countries, students nested in schools), you can
+employ some kind of fixed effects or random effects to outright model
+the source of unit heterogeneity. No matter, the “textbook” tests for
+these are typically in the time series case and involve the
+Durbin-Watson test or the Breusch-Godfrey test.
 
 Of the two, practitioners I’ve read seem to favor the latter over the
 former. The Durbin-Watson test has some pretty strong assumptions and
@@ -1437,13 +1449,13 @@ coeftest(M2, vcov = sandwich::vcovBS(M2, R = 1000))
 #> t test of coefficients:
 #> 
 #>                   Estimate  Std. Error t value Pr(>|t|)   
-#> (Intercept)     3.5205e-01  2.1451e-01  1.6412 0.102032   
-#> xm_qudsest      2.4458e-01  9.3876e-02  2.6054 0.009739 **
-#> wbgdppc2011est  8.3176e-02  3.0340e-02  2.7415 0.006567 **
-#> init            1.2043e-01  1.0884e-01  1.1065 0.269591   
-#> milex           1.1194e-08  7.6893e-09  1.4558 0.146728   
-#> mindur         -1.8977e-04  8.9598e-05 -2.1181 0.035177 * 
-#> cinc            7.2242e-01  1.1215e+00  0.6442 0.520079   
+#> (Intercept)     3.5205e-01  2.1723e-01  1.6206 0.106379   
+#> xm_qudsest      2.4458e-01  9.7202e-02  2.5162 0.012502 * 
+#> wbgdppc2011est  8.3176e-02  3.0848e-02  2.6963 0.007498 **
+#> init            1.2043e-01  1.1083e-01  1.0867 0.278242   
+#> milex           1.1194e-08  7.7065e-09  1.4525 0.147629   
+#> mindur         -1.8977e-04  8.9051e-05 -2.1311 0.034078 * 
+#> cinc            7.2242e-01  1.0887e+00  0.6636 0.507589   
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 coeftest(M2) # compare to what M2 actually is.
@@ -1532,8 +1544,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.131)</td>
 <td>(0.207)</td>
 <td>(0.221)</td>
-<td>(0.204)</td>
-<td>(0.315)</td>
+<td>(0.206)</td>
+<td>(0.328)</td>
 </tr>
 <tr class="odd">
 <td>xm_qudsest</td>
@@ -1550,8 +1562,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.082)</td>
 <td>(0.095)</td>
 <td>(0.099)</td>
-<td>(0.090)</td>
-<td>(0.082)</td>
+<td>(0.088)</td>
+<td>(0.077)</td>
 </tr>
 <tr class="odd">
 <td>wbgdppc2011est</td>
@@ -1568,7 +1580,7 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.018)</td>
 <td>(0.030)</td>
 <td>(0.032)</td>
-<td>(0.029)</td>
+<td>(0.030)</td>
 <td>(0.038)</td>
 </tr>
 <tr class="odd">
@@ -1586,8 +1598,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.090)</td>
 <td>(0.110)</td>
 <td>(0.114)</td>
-<td>(0.109)</td>
-<td>(0.138)</td>
+<td>(0.114)</td>
+<td>(0.131)</td>
 </tr>
 <tr class="odd">
 <td>milex</td>
@@ -1640,8 +1652,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(1.032)</td>
 <td>(1.077)</td>
 <td>(1.153)</td>
-<td>(1.137)</td>
-<td>(0.962)</td>
+<td>(1.193)</td>
+<td>(0.974)</td>
 </tr>
 <tr class="odd">
 <td>Num.Obs.</td>

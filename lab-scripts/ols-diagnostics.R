@@ -85,7 +85,8 @@ theme_set(theme_steve()) # optional, but I want it...
 #' paragraphs in Markdown format. I don't know what that lever is based on my
 #' cornball workflow spinning this `.R` file to a `.md` file. This is *not* a 
 #' problem you will have formatting for LaTeX or HTML, but it will make for 
-#' a somewhat clumsy viewing experience on the course website.
+#' a somewhat clumsy viewing experience on the course website. Again, you'll be
+#' saying hi to my Mom a lot. She lives in Ohio.
 #' 
 #' Okay then, let's get on with the show. 
 #' 
@@ -401,14 +402,24 @@ summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
 #'  
 #' Once you know under what conditions that autocorrelation is going to happen, 
 #' you can probably skip this and go right to assorted tricks that you know will 
-#' work given the nature of your serial correlation. If you have a random walk 
-#' time series, you know those can typically be first-differenced in order to 
-#' strip out the source of autocorrelation If you have some type of "spatial" 
-#' serial autocorrelation (e.g. citizens nested in countries, students nested 
-#' in schools), you can employ some kind of fixed effects or random effects to 
-#' outright model the source of unit heterogeneity. No matter, the "textbook" 
-#' tests for these are typically in the time series case and involve the 
-#' Durbin-Watson test or the Breusch-Godfrey test.
+#' work given the nature of your serial correlation. So, this is going to be a
+#' curious exercise I'm going to have you do here. The fundamental grouping 
+#' effect here is primarily "spatial" or cross-sectional (in that it deals
+#' with state groupings) but the primary tests we teach around this particular
+#' assumption are temporal (i.e. we're going to prime you in the advanced level
+#' to think about time series and panel models). I just want to reiterate this
+#' is something you should really know in advance about your data, and should
+#' assume a priori about your data. The primary tests of interest are always
+#' geared toward temporal attributes of a data set (which, again, you should 
+#' know in advance).
+#' 
+#' Anywho, if you have a random walk time series, you know those can typically 
+#' be first-differenced in order to  strip out the source of autocorrelation. If 
+#' you have some type of "spatial" serial correlation (e.g. citizens nested in 
+#' countries, students nested in schools), you can employ some kind of fixed 
+#' effects or random effects to outright model the source of unit heterogeneity. 
+#' No matter, the "textbook" tests for these are typically in the time series 
+#' case and involve the Durbin-Watson test or the Breusch-Godfrey test.
 #'  
 #' Of the two, practitioners I’ve read seem to favor the latter over the former. 
 #' The Durbin-Watson test has some pretty strong assumptions and only looks for 
