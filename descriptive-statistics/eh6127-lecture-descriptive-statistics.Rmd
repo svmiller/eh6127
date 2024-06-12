@@ -139,7 +139,7 @@ USA %>% filter(s002 == 5) %>%
 
 ### Levels of Measurement
 
-The classic typology, a la Stanley Smith.
+The classic typology, a la Stanley Smith Stevens.
 
 1. Nominal
 2. Ordinal
