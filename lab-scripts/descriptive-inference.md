@@ -26,21 +26,21 @@ really matter here.
 library(stevedata)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
 #> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
 #> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.1     
+#> ✔ purrr     1.0.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
 #> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 ```
 
-One of you has an issue with `{tidyverse}` because of `{systemfonts}`.
-These are basically the packages we’ll be using today with that in mind.
-I won’t load them in this script, but you should “uncomment” (sic) them
-and load them into your session.
+If, for some reason, you don’t want to load `{tidyverse}` (i.e. you
+might be one of my past students that had some issues with
+`{systemfonts}`), here are the component packages we’ll be using. Just
+“uncomment” (sic) these four lines of code and execute them.
 
 ``` r
 # library(dplyr)
@@ -67,9 +67,9 @@ We’ll be using three toy data sets in this session. The first is
 American attitudes toward national spending in the General Social Survey
 (2018). The second is a sample of macroeconomic data from the Penn World
 Table (from [the previous lab
-session](http://eh6105.svmiller.com/lab-scripts/intro-r-rstudio.html)).
-The third data set are attitudes about the justifiability of taking a
-bribe in the World Values Survey.
+session](http://eh6127.svmiller.com/lab-scripts/lab-1/)). The third data
+set are attitudes about the justifiability of taking a bribe in the
+World Values Survey.
 
 ``` r
 # Check out documentation.
@@ -78,7 +78,7 @@ bribe in the World Values Survey.
 ?wvs_justifbribe
 ```
 
-# Identifying Modes and Medians
+## Identifying Modes and Medians
 
 If you know a variable of interest is discrete (i.e. it only has a
 finite set of responses), your tools for assessing central tendency are
