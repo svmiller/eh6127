@@ -154,11 +154,11 @@ There's a fourth method (unordered, with replacement), but it is unintuitive, no
 
 ### An Illustration
 
-There are 33 of you. How many different ways can I devise a random sample of 5 of you?
+Assume a class of 25 students. How many different ways can I devise a random sample of 5?
 
-- Ordered, with replacement: $33^5$ = 39,135,393
-- Ordered, without replacement: $\frac{n!}{(n-k)!} = \frac{33!}{28!}$ = 28,480,320
-- Unordered, without replacement: ${33 \choose 5}$ = 237,336
+- Ordered, with replacement: $25^5$ = 9,765,625
+- Ordered, without replacement: $\frac{n!}{(n-k)!} = \frac{25!}{20!}$ = 6,375,600
+- Unordered, without replacement: ${25 \choose 5}$ = 53,130
 
 ## Binomial Theorem and Mass Function
 ### Binomial Theorem
