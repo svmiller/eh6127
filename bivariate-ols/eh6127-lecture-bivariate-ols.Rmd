@@ -110,7 +110,31 @@ We'll go over the following two topics.
 - Life expectancy: average life expectancy form men and women (in years)
 - *Data subset to 2020 for states in the EU (incl. the UK)*
 
-We get a preliminary judgment using a **scatterplot**.
+We'll start with a preliminary judgment by way of a scatterplot.
+
+### If You'd Like to Follow Along...
+
+\small
+
+```{r, eval=FALSE}
+# library(stevedata) # has eurostat_codes and wbd_example
+# ?eurostat_codes
+# ?wbd_example
+
+eurostat_codes %>% 
+  # filters to any eurostat codes that are/were EU
+  filter(cat == "EU" | iso2c == "UK") %>% 
+  # pulls to a vector, and assigns
+  pull(iso2c) -> isocodes_we_want
+
+wbd_example %>% 
+  na.omit %>% # for ease, given the nature of the data
+  # then, filter to just observations in 2020
+  filter(year == 2020)  %>% 
+  # then, filter where isocode matches what we want, and assign to Data
+  filter(iso2c %in% isocodes_we_want) -> Data
+```
+
 
 <!-- - But first: let's look at our data a bit. -->
 
