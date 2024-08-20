@@ -25,11 +25,11 @@ using today.
 ``` r
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
 #> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
 #> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.1     
+#> ✔ purrr     1.0.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -64,8 +64,8 @@ The lecture uses actual (toy) data from the World Bank to introduce you
 to the linear model in the bivariate case. Now, I think it might be time
 for you to get it in the completely “fabricated” sense. In this lab
 script, you are going to create data that you will use to learn more
-about what the linear model with its OLS esimator is telling you (by way
-of `lm()` output).
+about what the linear model with its OLS estimator is telling you (by
+way of `lm()` output).
 
 Take careful inventory of what’s going to happen here. We’re going to
 set a reproducible seed, and then we’re going to create two new “random”
@@ -677,7 +677,7 @@ summary(M3)
 ```
 
 See that *p*-value with that *F* statistic? I can’t say that this model
-performs any better than an intercept only model. fWell, duh.
+performs any better than an intercept only model. Well, duh.
 
 ## Conclusion
 

@@ -57,7 +57,7 @@ theme_set(theme_minimal())
 #' linear model in the bivariate case. Now, I think it might be time for you to 
 #' get it in the completely "fabricated" sense. In this lab script, you are going 
 #' to create data that you will use to learn more about what the linear model 
-#' with its OLS esimator is telling you (by way of `lm()` output).
+#' with its OLS estimator is telling you (by way of `lm()` output).
 #' 
 #' Take careful inventory of what's going to happen here. We're going to set a 
 #' reproducible seed, and then we're going to create two new "random" variables, 
@@ -420,7 +420,7 @@ M3 <- lm(y ~ noise, data=Fake)
 summary(M3)
 
 #' See that *p*-value with that *F* statistic? I can't say that this model 
-#' performs any better than an intercept only model. fWell, duh.
+#' performs any better than an intercept only model. Well, duh.
 #'
 #' ## Conclusion
 #'
