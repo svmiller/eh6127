@@ -63,11 +63,11 @@ function that does what `linloess_plot()` does (but better).
 ``` r
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
 #> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
 #> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.1     
+#> ✔ purrr     1.0.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -738,7 +738,7 @@ The implications of non-independent errors—aka “serial correlation” or
 than the estimator itself. That said, there is reason to believe the
 standard errors are wrong and this can have important implications for
 statistical inference you’d like to do. No matter, this is a huge
-assumption about OLS ans violating it ultimately means OLS loses its
+assumption about OLS and violating it ultimately means OLS loses its
 inferential value. The data are no longer randomly sampled in that
 sense.
 
@@ -1692,9 +1692,8 @@ multiple, and involve doing robustness tests on your original model to
 see how sensitive the major inferential takeaways are to these
 alternative estimation procedures.
 
-[^1]: The fatalities offered by Gibler and Miller (2023, Forthcoming)
-    have high and low estimates. We’ll focus on just the low estimates
-    here.
+[^1]: The fatalities offered by Gibler and Miller (2024) have high and
+    low estimates. We’ll focus on just the low estimates here.
 
 [^2]: We are also going to leave aside an important conversation to have
     about just how advisable a +1-and-log really is for isolating

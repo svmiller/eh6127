@@ -120,7 +120,7 @@ theme_set(theme_steve()) # optional, but I want it...
 #' participant (often meaning it self-selected into the conflict). Otherwise,
 #' it will be a 0.
 #' 
-#' [^min]: The fatalities offered by Gibler and Miller (2023, Forthcoming) have
+#' [^min]: The fatalities offered by Gibler and Miller (2024) have
 #' high and low estimates. We'll focus on just the low estimates here.
 states_war %>%
   mutate(ler = oppfatalmin/(fatalmin + 1),
@@ -166,9 +166,9 @@ summary(M1)
 #' This is why I encourage you to explore this visually. For one, start with
 #' arguably the most useful OLS diagnostic plot: the fitted-residual plot. Grab
 #' the fitted values from the model and the residuals and create a scatterplot
-#' from them. Then, overlay a LOESS smoother over it to check for any irregularities.
-#' By definition, the "rise over run" line is flat at 0. The LOESS smoother will
-#' communicate whether that's actually a line of good fit.
+#' from them. Then, overlay a LOESS smoother over it to check for any 
+#' irregularities. By definition, the "rise over run" line is flat at 0. The 
+#' LOESS smoother will communicate whether that's actually a line of good fit.
 #' 
 #' Base R has a function that can do this for you. `plot()` is a default 
 #' function in R that, if applied to an object created by `lm()`, will create
@@ -396,7 +396,7 @@ summary(update(M4, . ~ . -I(xm_qudsest^2), data=subset(Data, povdum == 1)))
 #' estimator than the estimator itself. That said, there is reason to 
 #' believe the standard errors are wrong and this can have important 
 #'  implications for statistical inference you’d like to do. No matter, this
-#'  is a huge assumption about OLS ans violating it ultimately means OLS
+#'  is a huge assumption about OLS and violating it ultimately means OLS
 #'  loses its inferential value. The data are no longer randomly sampled in that
 #'  sense.
 #'  
@@ -498,34 +498,36 @@ modelsummary(list("log(LER + 1)" = M2,
 #' 
 #' ## Normality (of the Errors)
 #' 
-#' OLS assumes the *errors* are normally distributed. This is often conflated with
-#' an assumption  that the outcome variable is normally distributed. That's not 
-#' quite what it is. It does imply that the conditional distribution of the 
-#' dependent variable is normal but that is not equivalent to assuming the marginal
-#' distribution of the dependent variable is normal. At the end of the day, the 
-#' assumption of normality is more about the errors than the dependent variable 
-#' even as the assumption about the former does strongly imply an assumption about 
-#' the latter.
+#' OLS assumes the *errors* are normally distributed. This is often conflated 
+#' with an assumption  that the outcome variable is normally distributed. That's 
+#' not quite what it is. It does imply that the conditional distribution of the 
+#' dependent variable is normal but that is not equivalent to assuming the 
+#' marginal distribution of the dependent variable is normal. At the end of the 
+#' day, the assumption of normality is more about the errors than the dependent 
+#' variable even as the assumption about the former does strongly imply an 
+#' assumption about the latter.
 #' 
-#' Violating the assumption of a normal distribution of the errors is not as severe 
-#' as a violation of some of the other assumptions. The normality assumption is not 
-#' necessary for point estimates to be unbiased. In one prominent textbook on 
-#' statistical methods, Gelman and Hill (2007, p. 46) say the normality assumption 
-#' is not important at all because it has no strong implication for the regression 
-#' line. I think this follows because Gelman and Hill (2007)---later Gelman, Hill, and 
-#' Vehtari (2020)---are nowhere near as interested in null hypothesis testing as your 
-#' typical social scientist likely is. No matter, violating the assumption of a normal 
-#' distribution of errors has some implication for drawing a line that reasonably 
-#' approximates individual data points (if not the line itself, per se). Thus, you 
-#' may want to check it, certainly if you have a small data set.
+#' Violating the assumption of a normal distribution of the errors is not as 
+#' severe as a violation of some of the other assumptions. The normality 
+#' assumption is not necessary for point estimates to be unbiased. In one 
+#' prominent textbook on statistical methods, Gelman and Hill (2007, p. 46) say 
+#' the normality assumption is not important at all because it has no strong 
+#' implication for the regression line. I think this follows because Gelman and 
+#' Hill (2007)---later Gelman, Hill, and Vehtari (2020)---are nowhere near as 
+#' interested in null hypothesis testing as your typical social scientist likely 
+#' is. No matter, violating the assumption of a normal distribution of errors 
+#' has some implication for drawing a line that reasonably approximates 
+#' individual data points (if not the line itself, per se). Thus, you may want 
+#' to check it, certainly if you have a small data set.
 #' 
-#' My misgiving with these normality tests is that they *all* suck, even at what they're
-#' supposed to do. The "textbook" normality tests involve extracting the residuals
-#' from the model and checking if their distribution is consistent with data that
-#' could be generated by a normal distribution. The two implementations here are typically
-#' base R. One is the Shapiro-Wilk test. The other is the Kolmogorv-Smirnov test. There 
-#' are more---like the Anderson-Darling test---which you can also do and is communicating
-#' the same thing. You can explore a few of these in the `{nortest}` package.
+#' My misgiving with these normality tests is that they *all* suck, even at what 
+#' they're supposed to do. The "textbook" normality tests involve extracting the 
+#' residuals from the model and checking if their distribution is consistent 
+#' with data that could be generated by a normal distribution. The two 
+#' implementations here are typically base R. One is the Shapiro-Wilk test. The 
+#' other is the Kolmogorv-Smirnov test. There are more---like the 
+#' Anderson-Darling test---which you can also do and is communicating the same 
+#' thing. You can explore a few of these in the `{nortest}` package.
 #' 
 
 shapiro.test(resid(M2))
@@ -609,9 +611,9 @@ rd_plot(M3)
 #' (i.e. an integer), especially one that has some kind of skew?
 #' Maybe you want a Poisson regression, or negative binomial.
 #' 
-#' Either way, the solution to the non-normality of the residuals involves outright
-#' modeling the kind of data that presents this kind of non-normality. The 
-#' assumption, to be clear, is about the *errors*, but the "problem" and the 
+#' Either way, the solution to the non-normality of the residuals involves 
+#' outright modeling the kind of data that presents this kind of non-normality. 
+#' The assumption, to be clear, is about the *errors*, but the "problem" and the 
 #' "solution" often point to what exactly your dependent variable looks like 
 #' and whether OLS is the right model for the job.
 #' 
