@@ -299,8 +299,8 @@ broom::augment(M2) %>%
 
 linloess_plot(M2, pch=21)
 
-#' `{car}` has this one for you, if you'd like. I'll concede it works better than
-#' my function at the moment.
+#' `{car}` has this one for you, if you'd like. I'll concede it works better 
+#' than my function at the moment.
 
 car::residualPlots(M2)
 
@@ -318,13 +318,13 @@ car::residualPlots(M2)
 #' versus a fledgling autocracy like Iran in the early 1980s. We might be seeing
 #' that here.
 #' 
-#' 2. The GDP per capita variable has some clusters. It's already log-transformed,
-#' so I'm disinclined to take a log of a log. It's technically benchmarked in
-#' 2011 USD, so there's not an issue of nominal or real dollars here. Some
-#' states are just poor? In our data, I see a jump from 2.428 (Mecklenburg in 
-#' the First Schleswig War) to 5.815 (i.e. Ethiopia in the Second 
-#' Italian-Ethiopian War). A few things might be happening here, and it's worth
-#' noting estimates of GDP per capita in the 19th century are *always* 
+#' 2. The GDP per capita variable has some clusters. It's already 
+#' log-transformed, so I'm disinclined to take a log of a log. It's technically 
+#' benchmarked in 2011 USD, so there's not an issue of nominal or real dollars 
+#' here. Some states are just poor? In our data, I see a jump from 2.428 
+#' (Mecklenburg in the First Schleswig War) to 5.815 (i.e. Ethiopia in the 
+#' Second Italian-Ethiopian War). A few things might be happening here, and it's 
+#' worth noting estimates of GDP per capita in the 19th century are *always* 
 #' tentative and prone to some kind of measurement error. It might be ideal to 
 #' proportionalize (sic) these, much like we did with the LER variable. However, 
 #' that would require more information (on my end, behind the scenes) than we 
@@ -727,7 +727,7 @@ modelsummary(list("log(LER)" = M2,
 #' [Mackinnon and White (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
 #' I can't really say this with 100% certainty (because you won't know until
 #' you can see it for yourself) but it's often the case that older analyses 
-#' that report "robust" standard errors are Huber-White ("HCO") standard 
+#' that report "robust" standard errors are Huber-White ("HC0") standard 
 #' errors and "heteroskedasticity-robust" standard errors in newer analyses
 #' are HC3 standard errors. That's at least a heuristic I've  picked up from 
 #' my experience.

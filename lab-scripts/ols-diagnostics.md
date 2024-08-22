@@ -1410,7 +1410,7 @@ offering from [Mackinnon and White
 (1985)](https://www.sciencedirect.com/science/article/abs/pii/0304407685901587).
 I can’t really say this with 100% certainty (because you won’t know
 until you can see it for yourself) but it’s often the case that older
-analyses that report “robust” standard errors are Huber-White (“HCO”)
+analyses that report “robust” standard errors are Huber-White (“HC0”)
 standard errors and “heteroskedasticity-robust” standard errors in newer
 analyses are HC3 standard errors. That’s at least a heuristic I’ve
 picked up from my experience.
