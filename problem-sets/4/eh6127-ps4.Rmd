@@ -35,11 +35,15 @@ Here's a little preview of these data.
 GHR04
 ```
 
+```{r, echo=F, eval=F}
+
+```
+
 Answer these questions. This particular homework may seem brutal because it will demand that you read the Ghobarah et al. (2004) article (see footnote citation) and look *carefully* at the codebook for this data set.
 
-1. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table I (for which public health expenditures as a percent of GDP is the dependent variable). A successful answer will involve both code and console output. 
-2. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table II (for which total expenditures on health is the dependent variable). A successful answer will involve both code and console output.
-3. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table III (for which health-adjusted life expectancy is the dependent variable). A successful answer will involve both code and console output.
+1. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table I (for which public health expenditures as a percent of GDP is the dependent variable). A successful answer will involve both code and console output. You do *not* need to reproduce the percentage changes (so-called "quantities of interest").
+2. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table II (for which total expenditures on health is the dependent variable). A successful answer will involve both code and console output. You do *not* need to reproduce the percentage changes (so-called "quantities of interest").
+3. (2 POINTS) Using the data set provided to you, and the `lm()` function in base R, reproduce Table III (for which health-adjusted life expectancy is the dependent variable). A successful answer will involve both code and console output. You do *not* need to reproduce the percentage changes (so-called "quantities of interest").
 4. (2 POINTS) Answer one of the following prompts:
     a. For the regression model on health-adjusted life expectancy, re-run the model (but omit Rwanda from the analysis). Show me the code you used to do this and highlight any differences in sign/significance you see comparing this model to the model above.
     b. In the regression model you estimated for Question 3, the intercept is "statistically significant." What is that value for the intercept actually communicating? Does it make sense?
