@@ -738,7 +738,7 @@ modelsummary(list("log(LER)" = M2,
 #' `, robust` at the end of the `reg` call.[^blah]
 #' 
 #' [^blah]: The distinction among these various standard error corrections
-#' depend on the intersection of leverage points and sample size. For larger 
+#' depends on the intersection of leverage points and sample size. For larger 
 #' sample sizes, the distinctions don't really materialize. For smaller sample
 #' sizes without a lot of leverage points, type "HC0" and "HC1" tend to 
 #' underestimate standard errors. For smaller sample sizes with a lot of leverage
@@ -755,7 +755,8 @@ modelsummary(list("log(LER)" = M2,
 #' recommend a modified version of it, though. This topic is admittedly kind of
 #' frustrating. So much of what's "suggested" is often an issue of path dependence
 #' and an uncritical use of current practice. In other words: we suggest things 
-#' as defaults because they are defaults. Do what's been done before.
+#' as defaults because they are defaults. Do what's been done before. Just
+#' because it's standard practice doesn't necessarily make it good practice, though.
 #' 
 #' There's another approach, which is 100% I'd do if I were presented the 
 #' opportunity. I'd bootstrap this motherfucker. You likewise have
