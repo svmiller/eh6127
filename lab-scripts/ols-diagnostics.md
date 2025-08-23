@@ -63,11 +63,11 @@ function that does what `linloess_plot()` does (but better).
 ``` r
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.4     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.2     
+#> ✔ ggplot2   3.5.1     ✔ tibble    3.3.0
+#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
+#> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
@@ -172,8 +172,8 @@ by CoW’s National Material Capabilities data as the composite index of
 national capabilities (`cinc`).
 
 ``` r
-M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + 
-           xm_qudsest + mindur + cinc, 
+M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + xm_qudsest + 
+           mindur + cinc, 
          Data)
 ```
 
@@ -380,7 +380,7 @@ modelsummary(list("LER" = M1,
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>LER</th>
 <th>log(LER + 1)</th>
@@ -388,142 +388,140 @@ modelsummary(list("LER" = M1,
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(Intercept)</td>
 <td>31.170</td>
 <td>0.352</td>
 <td>0.364***</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(62.237)</td>
 <td>(0.302)</td>
 <td>(0.076)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>xm_qudsest</td>
 <td>9.453</td>
 <td>0.245**</td>
 <td>0.075***</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(16.547)</td>
 <td>(0.080)</td>
 <td>(0.020)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>wbgdppc2011est</td>
 <td>-3.328</td>
 <td>0.083*</td>
 <td>0.022*</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(7.472)</td>
 <td>(0.036)</td>
 <td>(0.009)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>init</td>
 <td>-8.634</td>
 <td>0.120</td>
 <td>0.050</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(27.620)</td>
 <td>(0.134)</td>
 <td>(0.034)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>milex</td>
 <td>0.000***</td>
 <td>0.000***</td>
 <td>0.000</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mindur</td>
 <td>-0.006</td>
-<td>0.000+</td>
-<td>0.000</td>
+<td>-0.000+</td>
+<td>-0.000</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.022)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cinc</td>
 <td>-142.038</td>
 <td>0.722</td>
 <td>0.233</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(200.469)</td>
 <td>(0.972)</td>
 <td>(0.245)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Num.Obs.</td>
 <td>252</td>
 <td>252</td>
 <td>246</td>
 </tr>
-<tr class="even">
+<tr>
 <td>R2</td>
 <td>0.442</td>
 <td>0.239</td>
 <td>0.160</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>R2 Adj.</td>
 <td>0.428</td>
 <td>0.220</td>
 <td>0.139</td>
 </tr>
-<tr class="even">
+<tr>
 <td>AIC</td>
 <td>3374.9</td>
 <td>689.1</td>
 <td>-7.8</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>BIC</td>
 <td>3403.1</td>
 <td>717.3</td>
 <td>20.2</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Log.Lik.</td>
 <td>-1679.454</td>
 <td>-336.530</td>
 <td>11.907</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RMSE</td>
 <td>189.72</td>
 <td>0.92</td>
 <td>0.23</td>
 </tr>
 </tbody><tfoot>
-<tr class="even">
+<tr>
 <td colspan="4"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
 </tfoot>
 &#10;</table>
-
-Hi Mom!
 
 The results here show that it’s not just a simple matter that “different
 DVs = different results”. Far from it. Different *reasoned* design
@@ -853,158 +851,156 @@ modelsummary(list("log(LER + 1)" = M2,
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>log(LER + 1)</th>
 <th>w/ Period FE</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(Intercept)</td>
 <td>0.352</td>
 <td>0.321</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.302)</td>
 <td>(0.298)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>xm_qudsest</td>
 <td>0.245**</td>
 <td>0.251**</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.080)</td>
 <td>(0.080)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>wbgdppc2011est</td>
 <td>0.083*</td>
 <td>0.109**</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.036)</td>
 <td>(0.038)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>init</td>
 <td>0.120</td>
 <td>0.130</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.134)</td>
 <td>(0.132)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>milex</td>
 <td>0.000***</td>
 <td>0.000***</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mindur</td>
-<td>0.000+</td>
-<td>0.000</td>
+<td>-0.000+</td>
+<td>-0.000</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cinc</td>
 <td>0.722</td>
 <td>0.761</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.972)</td>
 <td>(1.033)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>periodWW1 and WW2 Era</td>
 <td></td>
 <td>-0.526**</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td></td>
 <td>(0.165)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>periodCold War</td>
 <td></td>
 <td>-0.300+</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td></td>
 <td>(0.165)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>periodPost-Cold War</td>
 <td></td>
 <td>-0.070</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td></td>
 <td>(0.232)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Num.Obs.</td>
 <td>252</td>
 <td>252</td>
 </tr>
-<tr class="even">
+<tr>
 <td>R2</td>
 <td>0.239</td>
 <td>0.274</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>R2 Adj.</td>
 <td>0.220</td>
 <td>0.247</td>
 </tr>
-<tr class="even">
+<tr>
 <td>AIC</td>
 <td>689.1</td>
 <td>683.3</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>BIC</td>
 <td>717.3</td>
 <td>722.2</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Log.Lik.</td>
 <td>-336.530</td>
 <td>-330.669</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>RMSE</td>
 <td>0.92</td>
 <td>0.90</td>
 </tr>
 </tbody><tfoot>
-<tr class="even">
+<tr>
 <td colspan="3"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
 </tfoot>
 &#10;</table>
-
-Hi Mom!
 
 Do note fixed effects in this application have a tendency to “demean”
 other things in the model, and they have a slightly different
@@ -1156,19 +1152,19 @@ relatively few covariates and the covariates you do include are dummy
 variables. If you have *so* few observations in the model (i.e. I can
 count the number of observations in the model on one or three hands),
 any distribution of residuals will look crazy. That’s *probably* not
-your case,especially as you’ve thought through the data-generating
+your case, especially as you’ve thought through the data-generating
 process for your dependent variable. It’s more likely the case that you
-have a discrete dependent variable and you’re trying to impose OLS on
-it. The end result is a subset of residuals that look kind of wonky at
-the tails of the distribution. Under those conditions, it makes more
-sense to use the right model for the nature of your dependent variable.
-If your DV is binary, consider a logistic regression. If you’re trying
-to model variation in a 5-item Likert measure, consider the ordinal
-logistic regression. If you have a proportion with observations
-appearing at the exact limit of the proportion, consider some kind of
-beta regression. Are you trying to model a “count” variable (i.e. an
-integer), especially one that has some kind of skew? Maybe you want a
-Poisson regression, or negative binomial.
+have a discrete dependent variable and you’re trying to impose a linear
+model on it. The end result is a subset of residuals that look kind of
+wonky at the tails of the distribution. Under those conditions, it makes
+more sense to use the right model for the nature of your dependent
+variable. If your DV is binary, consider a logistic regression. If
+you’re trying to model variation in a 5-item Likert measure, consider
+the ordinal logistic regression. If you have a proportion with
+observations appearing at the exact limit of the proportion, consider
+some kind of beta regression. Are you trying to model a “count” variable
+(i.e. an integer), especially one that has some kind of skew? Maybe you
+want a Poisson regression, or negative binomial.
 
 Either way, the solution to the non-normality of the residuals involves
 outright modeling the kind of data that presents this kind of
@@ -1284,103 +1280,101 @@ modelsummary(list("log(LER)" = M2,
 <col style="width: 15%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>log(LER)</th>
 <th>WLS</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(Intercept)</td>
 <td>0.352</td>
 <td>0.386**</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.302)</td>
 <td>(0.139)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>xm_qudsest</td>
 <td>0.245**</td>
 <td>0.103</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.080)</td>
 <td>(0.065)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>wbgdppc2011est</td>
 <td>0.083*</td>
 <td>0.068***</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.036)</td>
 <td>(0.018)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>init</td>
 <td>0.120</td>
 <td>0.182+</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.134)</td>
 <td>(0.093)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>milex</td>
 <td>0.000***</td>
 <td>0.000</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mindur</td>
-<td>0.000+</td>
-<td>0.000</td>
+<td>-0.000+</td>
+<td>-0.000</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cinc</td>
 <td>0.722</td>
 <td>0.883</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.972)</td>
 <td>(0.919)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Num.Obs.</td>
 <td>252</td>
 <td>252</td>
 </tr>
-<tr class="even">
+<tr>
 <td>R2 Adj.</td>
 <td>0.220</td>
 <td>0.117</td>
 </tr>
 </tbody><tfoot>
-<tr class="odd">
+<tr>
 <td colspan="3"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
 </tfoot>
 &#10;</table>
-
-Hi Mom!
 
 Re-estimating the model by way of weighted least squares reveals some
 interesting changes, leaving open the possibility that any inference
@@ -1413,7 +1407,12 @@ until you can see it for yourself) but it’s often the case that older
 analyses that report “robust” standard errors are Huber-White (“HC0”)
 standard errors and “heteroskedasticity-robust” standard errors in newer
 analyses are HC3 standard errors. That’s at least a heuristic I’ve
-picked up from my experience.
+picked up from my experience. It’s conceivable that “robust” standard
+errors in analyses you see 20 years ago might also be type “HC1”. Your
+clue for that would be whether the analysis was conducted (or advertised
+that it was done) in Stata. “HC1” was (is?) Stata’s default standard
+error correction if you attached `, robust` at the end of the `reg`
+call.[^4]
 
 There’s another approach, which is 100% I’d do if I were presented the
 opportunity. I’d bootstrap this motherfucker. You likewise have several
@@ -1449,13 +1448,13 @@ coeftest(M2, vcov = sandwich::vcovBS(M2, R = 1000))
 #> t test of coefficients:
 #> 
 #>                   Estimate  Std. Error t value Pr(>|t|)   
-#> (Intercept)     3.5205e-01  2.1723e-01  1.6206 0.106379   
-#> xm_qudsest      2.4458e-01  9.7202e-02  2.5162 0.012502 * 
-#> wbgdppc2011est  8.3176e-02  3.0848e-02  2.6963 0.007498 **
-#> init            1.2043e-01  1.1083e-01  1.0867 0.278242   
-#> milex           1.1194e-08  7.7065e-09  1.4525 0.147629   
-#> mindur         -1.8977e-04  8.9051e-05 -2.1311 0.034078 * 
-#> cinc            7.2242e-01  1.0887e+00  0.6636 0.507589   
+#> (Intercept)     3.5205e-01  2.1451e-01  1.6412 0.102032   
+#> xm_qudsest      2.4458e-01  9.3876e-02  2.6054 0.009739 **
+#> wbgdppc2011est  8.3176e-02  3.0340e-02  2.7415 0.006567 **
+#> init            1.2043e-01  1.0884e-01  1.1065 0.269591   
+#> milex           1.1194e-08  7.6893e-09  1.4558 0.146728   
+#> mindur         -1.8977e-04  8.9598e-05 -2.1181 0.035177 * 
+#> cinc            7.2242e-01  1.1215e+00  0.6442 0.520079   
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 coeftest(M2) # compare to what M2 actually is.
@@ -1518,7 +1517,7 @@ modelsummary(list("log(LER)" = M2,
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>log(LER)</th>
 <th>WLS</th>
@@ -1529,7 +1528,7 @@ modelsummary(list("log(LER)" = M2,
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>(Intercept)</td>
 <td>0.352</td>
 <td>0.386**</td>
@@ -1538,16 +1537,16 @@ modelsummary(list("log(LER)" = M2,
 <td>0.352+</td>
 <td>0.352</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.302)</td>
 <td>(0.131)</td>
 <td>(0.207)</td>
 <td>(0.221)</td>
-<td>(0.206)</td>
-<td>(0.328)</td>
+<td>(0.204)</td>
+<td>(0.315)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>xm_qudsest</td>
 <td>0.245**</td>
 <td>0.103</td>
@@ -1556,16 +1555,16 @@ modelsummary(list("log(LER)" = M2,
 <td>0.245**</td>
 <td>0.245**</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.080)</td>
 <td>(0.082)</td>
 <td>(0.095)</td>
 <td>(0.099)</td>
-<td>(0.088)</td>
-<td>(0.077)</td>
+<td>(0.090)</td>
+<td>(0.082)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>wbgdppc2011est</td>
 <td>0.083*</td>
 <td>0.068***</td>
@@ -1574,16 +1573,16 @@ modelsummary(list("log(LER)" = M2,
 <td>0.083**</td>
 <td>0.083*</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.036)</td>
 <td>(0.018)</td>
 <td>(0.030)</td>
 <td>(0.032)</td>
-<td>(0.030)</td>
+<td>(0.029)</td>
 <td>(0.038)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>init</td>
 <td>0.120</td>
 <td>0.182*</td>
@@ -1592,16 +1591,16 @@ modelsummary(list("log(LER)" = M2,
 <td>0.120</td>
 <td>0.120</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.134)</td>
 <td>(0.090)</td>
 <td>(0.110)</td>
 <td>(0.114)</td>
-<td>(0.114)</td>
-<td>(0.131)</td>
+<td>(0.109)</td>
+<td>(0.138)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>milex</td>
 <td>0.000***</td>
 <td>0.000</td>
@@ -1610,7 +1609,7 @@ modelsummary(list("log(LER)" = M2,
 <td>0.000</td>
 <td>0.000***</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
@@ -1619,16 +1618,16 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>mindur</td>
-<td>0.000+</td>
-<td>0.000+</td>
-<td>0.000*</td>
-<td>0.000*</td>
-<td>0.000*</td>
-<td>0.000+</td>
+<td>-0.000+</td>
+<td>-0.000+</td>
+<td>-0.000*</td>
+<td>-0.000*</td>
+<td>-0.000*</td>
+<td>-0.000+</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.000)</td>
 <td>(0.000)</td>
@@ -1637,7 +1636,7 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.000)</td>
 <td>(0.000)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cinc</td>
 <td>0.722</td>
 <td>0.883</td>
@@ -1646,16 +1645,16 @@ modelsummary(list("log(LER)" = M2,
 <td>0.722</td>
 <td>0.722</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>(0.972)</td>
 <td>(1.032)</td>
 <td>(1.077)</td>
 <td>(1.153)</td>
-<td>(1.193)</td>
-<td>(0.974)</td>
+<td>(1.137)</td>
+<td>(0.962)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Num.Obs.</td>
 <td>252</td>
 <td>252</td>
@@ -1664,7 +1663,7 @@ modelsummary(list("log(LER)" = M2,
 <td>252</td>
 <td>252</td>
 </tr>
-<tr class="even">
+<tr>
 <td>R2 Adj.</td>
 <td>0.220</td>
 <td>0.117</td>
@@ -1674,15 +1673,13 @@ modelsummary(list("log(LER)" = M2,
 <td>0.220</td>
 </tr>
 </tbody><tfoot>
-<tr class="odd">
+<tr>
 <td colspan="7"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
 </tfoot>
 &#10;</table>
-
-Hi Mom! Last time, I promise.
 
 The summary here suggests that we have heteroskedastic errors, and what
 we elect to do about it—or even if we elect to do anything about it—have
@@ -1703,3 +1700,26 @@ alternative estimation procedures.
 
 [^3]: “Creep” is 100% the best single off that record, but didn’t have
     the Windows 95-era CGI. You know I’m right. Stay out of my mentions.
+
+[^4]: The distinction among these various standard error corrections
+    depend on the intersection of leverage points and sample size. For
+    larger sample sizes, the distinctions don’t really materialize. For
+    smaller sample sizes without a lot of leverage points, type “HC0”
+    and “HC1” tend to underestimate standard errors. For smaller sample
+    sizes with a lot of leverage points, HC3 tends to perform best while
+    “HC0” and HC1” perform worse. While it tracks that “HC3” standard
+    error corrections may want to overestimate standard errors,
+    econometricians tend to like this under the premise that it makes
+    their standard error corrections “conservative” (i.e. it makes it
+    harder to reject the null hypothesis and better hedges against Type
+    I errors). It’s why the R packages that do these standard error
+    corrections prioritize “HC3” over others. In principle, “HC2” is not
+    as conservative as “HC3” and performs better in smaller samples than
+    “HC0” and “HC1”. However, I cannot earnestly tell you ever seeing
+    such a standard error correction in the wild. [Imbens and Kolesar
+    (2016)](https://direct.mit.edu/rest/article-abstract/98/4/701/58336/Robust-Standard-Errors-in-Small-Samples-Some?redirectedFrom=fulltext)
+    recommend a modified version of it, though. This topic is admittedly
+    kind of frustrating. So much of what’s “suggested” is often an issue
+    of path dependence and an uncritical use of current practice. In
+    other words: we suggest things as defaults because they are
+    defaults. Do what’s been done before.

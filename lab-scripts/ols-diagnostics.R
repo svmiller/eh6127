@@ -110,15 +110,15 @@ theme_set(theme_steve()) # optional, but I want it...
 #' the denominator of that equation to prevent division by 0. We'll create this
 #' one, and another that's proportional (i.e. imposed fatalities over imposed
 #' fatalities and state's own fatalities). Play with this to your heart's 
-#' content.[^min] Second, we're going to create an initiator variable (`init`) to 
-#' isolate those states that make conscious forays into war. From my experience
-#' creating data for `{peacesciencer}`, it is usually (though not always) the
-#' case that you can discern initiation from whether it's on the Side A and/or
-#' it's an original participant. To get to the point, the initiator variable 
-#' will be 1 if 1) it's on Side A (i.e. the side that made the first incident)
-#' *and* it's an original participant and 2) if it's *not* an original 
-#' participant (often meaning it self-selected into the conflict). Otherwise,
-#' it will be a 0.
+#' content.[^min] Second, we're going to create an initiator variable (`init`) 
+#' to isolate those states that make conscious forays into war. From my 
+#' experience creating data for `{peacesciencer}`, it is usually (though not 
+#' always) the case that you can discern initiation from whether it's on the 
+#' Side A and/or it's an original participant. To get to the point, the 
+#' initiator variable will be 1 if 1) it's on Side A (i.e. the side that made 
+#' the first incident) *and* it's an original participant and 2) if it's 
+#' *not* an original participant (often meaning it self-selected into the 
+#' conflict). Otherwise, it will be a 0.
 #' 
 #' [^min]: The fatalities offered by Gibler and Miller (2024) have
 #' high and low estimates. We'll focus on just the low estimates here.
@@ -131,6 +131,7 @@ states_war %>%
            TRUE ~ 0
   )) -> Data
 
+
 #' Now, let's do a kind-of replication of the second model in Table 1, where
 #' we'll model the first loss exchange ratio variable (LER) we created (`ler`) 
 #' as a function of democracy (`xm_qudsest`), GDP per capita (`wbgdppc2011est`),
@@ -139,8 +140,8 @@ states_war %>%
 #' the familiar estimate of power provided by CoW's National Material 
 #' Capabilities data as the composite index of national capabilities (`cinc`).
 
-M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + 
-           xm_qudsest + mindur + cinc, 
+M1 <- lm(ler ~ xm_qudsest + wbgdppc2011est + init + milex + xm_qudsest + 
+           mindur + cinc, 
          Data)
 
 #' Okie doke, let's see what we got.
@@ -597,19 +598,19 @@ rd_plot(M3)
 #' few covariates and the covariates you do include are dummy variables. If you 
 #' have *so* few observations in the model (i.e. I can count the number of 
 #' observations in the model on one or three hands), any distribution of 
-#' residuals will look crazy. That's *probably* not your case,especially as 
+#' residuals will look crazy. That's *probably* not your case, especially as 
 #' you've thought through the data-generating process for your dependent 
 #' variable. It's more likely the case that you have a discrete dependent
-#' variable and you're trying to impose OLS on it. The end result is a subset of
-#' residuals that look kind of wonky at the tails of the distribution. Under 
-#' those conditions, it makes more sense to use the right model for the nature 
-#' of your dependent variable. If your DV is binary, consider a logistic 
-#' regression. If you're trying to model variation in a 5-item Likert measure, 
-#' consider the ordinal logistic regression. If you have a proportion with 
-#' observations appearing at the exact limit of the proportion, consider some 
-#' kind of beta regression. Are you trying to model a "count" variable 
-#' (i.e. an integer), especially one that has some kind of skew?
-#' Maybe you want a Poisson regression, or negative binomial.
+#' variable and you're trying to impose a linear model on it. The end result is 
+#' a subset of residuals that look kind of wonky at the tails of the 
+#' distribution. Under those conditions, it makes more sense to use the right 
+#' model for the nature of your dependent variable. If your DV is binary, 
+#' consider a logistic regression. If you're trying to model variation in a 
+#' 5-item Likert measure, consider the ordinal logistic regression. If you have 
+#' a proportion with observations appearing at the exact limit of the 
+#' proportion, consider some kind of beta regression. Are you trying to model a 
+#' "count" variable (i.e. an integer), especially one that has some kind of 
+#' skew? Maybe you want a Poisson regression, or negative binomial.
 #' 
 #' Either way, the solution to the non-normality of the residuals involves 
 #' outright modeling the kind of data that presents this kind of non-normality. 
@@ -729,8 +730,32 @@ modelsummary(list("log(LER)" = M2,
 #' you can see it for yourself) but it's often the case that older analyses 
 #' that report "robust" standard errors are Huber-White ("HC0") standard 
 #' errors and "heteroskedasticity-robust" standard errors in newer analyses
-#' are HC3 standard errors. That's at least a heuristic I've  picked up from 
-#' my experience.
+#' are HC3 standard errors. That's at least a heuristic I've picked up from 
+#' my experience. It's conceivable that "robust" standard errors in analyses
+#' you see 20 years ago might also be type "HC1". Your clue for that would be
+#' whether the analysis was conducted (or advertised that it was done) in Stata.
+#' "HC1" was (is?) Stata's default standard error correction if you attached
+#' `, robust` at the end of the `reg` call.[^blah]
+#' 
+#' [^blah]: The distinction among these various standard error corrections
+#' depend on the intersection of leverage points and sample size. For larger 
+#' sample sizes, the distinctions don't really materialize. For smaller sample
+#' sizes without a lot of leverage points, type "HC0" and "HC1" tend to 
+#' underestimate standard errors. For smaller sample sizes with a lot of leverage
+#' points, HC3 tends to perform best while "HC0" and HC1" perform worse. While
+#' it tracks that "HC3" standard error corrections may want to overestimate
+#' standard errors, econometricians tend to like this under the premise that
+#' it makes their standard error corrections "conservative" (i.e. it makes it
+#' harder to reject the null hypothesis and better hedges against Type I errors).
+#' It's why the R packages that do these standard error corrections prioritize
+#' "HC3" over others. In principle, "HC2" is not as conservative as "HC3" and
+#' performs better in smaller samples than "HC0" and "HC1". However, I cannot
+#' earnestly tell you ever seeing such a standard error correction in the wild.
+#' [Imbens and Kolesar (2016)](https://direct.mit.edu/rest/article-abstract/98/4/701/58336/Robust-Standard-Errors-in-Small-Samples-Some?redirectedFrom=fulltext) 
+#' recommend a modified version of it, though. This topic is admittedly kind of
+#' frustrating. So much of what's "suggested" is often an issue of path dependence
+#' and an uncritical use of current practice. In other words: we suggest things 
+#' as defaults because they are defaults. Do what's been done before.
 #' 
 #' There's another approach, which is 100% I'd do if I were presented the 
 #' opportunity. I'd bootstrap this motherfucker. You likewise have
