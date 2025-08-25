@@ -42,6 +42,34 @@ Here's a little preview of these data.
 african_coups
 ```
 
+```{r, echo=F, eval=F}
+#Q1: 
+
+african_coups %>% summarize(mean = mean(jci, na.rm=T), median = median(jci, na.rm=T)) # Q1
+african_coups %>% summarize(mean = mean(tmis, na.rm=T), median = median(tmis, na.rm=T)) # Q2
+african_coups %>% arrange(-tmis) # Q4
+african_coups %>% arrange(-jci) # Q4
+african_coups %>% filter(tmis == max(tmis) | jci == max(jci, na.rm=T)) # Q4
+
+african_coups %>% #Q5 - Q7
+  mutate(c = ifelse(leperc >= 44, 1, 0),
+         p = ifelse(turnout >= 21, 1, 0),
+         m = literacy_ba + (100 - agperc),
+         m2 = literacy_ba + indperc) -> Data
+
+Data %>%  #Q8
+  mutate(mean = mean(m, na.rm=T),
+         median = median(m, na.rm=T)) %>%
+  filter(m == max(m, na.rm=T) |  m == min(m,na.rm=T)) %>%
+  select(iso3c:country, m:ncol(.))
+
+Data %>%  #Q8
+  mutate(mean = mean(m2, na.rm=T),
+         median = median(m2, na.rm=T)) %>%
+  filter(m2 == max(m2, na.rm=T) |  m2 == min(m2,na.rm=T)) %>%
+  select(iso3c:country, m:ncol(.))
+```
+
 Answer these questions. A successful answer of these question must include the R code you used to help you answer the question.
 
 1. What is the median and mean of the coup index that Jackman (1978) calculates as the dependent variable in his statistical analysis?
