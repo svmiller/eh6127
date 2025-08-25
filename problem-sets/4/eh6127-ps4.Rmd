@@ -36,26 +36,7 @@ GHR04
 ```
 
 ```{r, echo=F, eval=F}
-M1 <- lm(pubhlthexppgdp ~  log_gdppc + gini + log_educ + log_vanhanen + 
-           rivalry + polity, data=GHR04) 
 
-M2 <- lm(totexphlth ~  log_gdppc + log_educ + pubhlthexppgdp + 
-           prvhlthexpgdp, data=GHR04) 
-
-M3 <- lm(hale ~  totexphlth + urban_growth + gini + log_vanhanen +
-           log_educ + cwdeaths + contig_cw, data=GHR04) 
-
-library(simqi)
-library(modelr)
-
-GHR04 %>%
-  data_grid(.model = M1,
-            log_gdppc = c(quantile(log_gdppc, .05, na.rm=T),
-                          median(log_gdppc, na.rm=T),
-                          quantile(log_gdppc,.95, na.rm = T))) %>%
-  sim_qi(M1, newdata = .,
-         return_newdata = TRUE) %>%
-  summarize(mean = mean(y), .by=c(log_gdppc))
 
 ```
 
