@@ -1,5 +1,5 @@
 ---
-output: stevetemplates::word
+output: pdf_document
 title: "Problem Set #1"
 author: Sven Svensson
 ---
