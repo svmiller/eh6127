@@ -2,6 +2,7 @@
 #' title: "The Bivariate Linear Model"
 #' layout: lab
 #' permalink: /lab-scripts/lab-3/
+#' filename: bivariate-ols.R
 #' active: lab-scripts
 #' abstract: "This lab scripts introduces students to the basic linear model in
 #' its bivariate form. Rather than use real-world data, we'll be using fake data

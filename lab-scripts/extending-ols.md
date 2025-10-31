@@ -2,6 +2,7 @@
 title: "Extending the Linear Model"
 layout: lab
 permalink: /lab-scripts/lab-4/
+filename: extending-ols.R
 active: lab-scripts
 abstract: "This is a lab script will encourage you to not overthink the
 linear model. If you're comfortable with what it's telling you in the simple
@@ -15,7 +16,7 @@ output:
      preserve_yaml: TRUE
 ---
 
-# R Packages/Data for This Session
+## R Packages/Data for This Session
 
 You should’ve already installed the R packages for this lab session.
 `{tidyverse}` will be for all things workflow and `{stevedata}` will
@@ -24,11 +25,11 @@ have the data sets we’ll be using today.
 ``` r
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.4     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.1     
+#> ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
+#> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()

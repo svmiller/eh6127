@@ -2,6 +2,7 @@
 #' title: "Extending the Linear Model"
 #' layout: lab
 #' permalink: /lab-scripts/lab-4/
+#' filename: extending-ols.R
 #' active: lab-scripts
 #' abstract: "This is a lab script will encourage you to not overthink the
 #' linear model. If you're comfortable with what it's telling you in the simple

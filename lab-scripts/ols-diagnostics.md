@@ -2,6 +2,7 @@
 title: "Linear Model Diagnostics (and What to Do if You Flunk One)"
 layout: lab
 permalink: /lab-scripts/lab-5/
+filename: ols-diagnostics.R
 active: lab-scripts
 abstract: "The linear model works great until it doesn't. Alternatively: I
 accept the model's output only the extent to which I accept its assumptions
@@ -65,7 +66,7 @@ library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 #> ✔ dplyr     1.1.4     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.3.0
+#> ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
 #> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
 #> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -1448,13 +1449,13 @@ coeftest(M2, vcov = sandwich::vcovBS(M2, R = 1000))
 #> t test of coefficients:
 #> 
 #>                   Estimate  Std. Error t value Pr(>|t|)   
-#> (Intercept)     3.5205e-01  2.1451e-01  1.6412 0.102032   
-#> xm_qudsest      2.4458e-01  9.3876e-02  2.6054 0.009739 **
-#> wbgdppc2011est  8.3176e-02  3.0340e-02  2.7415 0.006567 **
-#> init            1.2043e-01  1.0884e-01  1.1065 0.269591   
-#> milex           1.1194e-08  7.6893e-09  1.4558 0.146728   
-#> mindur         -1.8977e-04  8.9598e-05 -2.1181 0.035177 * 
-#> cinc            7.2242e-01  1.1215e+00  0.6442 0.520079   
+#> (Intercept)     3.5205e-01  2.1520e-01  1.6360 0.103131   
+#> xm_qudsest      2.4458e-01  9.7837e-02  2.4999 0.013078 * 
+#> wbgdppc2011est  8.3176e-02  3.0731e-02  2.7066 0.007277 **
+#> init            1.2043e-01  1.0916e-01  1.1033 0.270971   
+#> milex           1.1194e-08  7.7107e-09  1.4518 0.147847   
+#> mindur         -1.8977e-04  8.9418e-05 -2.1223 0.034813 * 
+#> cinc            7.2242e-01  1.0918e+00  0.6617 0.508815   
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 coeftest(M2) # compare to what M2 actually is.
@@ -1543,8 +1544,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.131)</td>
 <td>(0.207)</td>
 <td>(0.221)</td>
-<td>(0.204)</td>
-<td>(0.315)</td>
+<td>(0.205)</td>
+<td>(0.299)</td>
 </tr>
 <tr>
 <td>xm_qudsest</td>
@@ -1561,8 +1562,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.082)</td>
 <td>(0.095)</td>
 <td>(0.099)</td>
-<td>(0.090)</td>
-<td>(0.082)</td>
+<td>(0.092)</td>
+<td>(0.077)</td>
 </tr>
 <tr>
 <td>wbgdppc2011est</td>
@@ -1579,8 +1580,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.018)</td>
 <td>(0.030)</td>
 <td>(0.032)</td>
-<td>(0.029)</td>
-<td>(0.038)</td>
+<td>(0.030)</td>
+<td>(0.036)</td>
 </tr>
 <tr>
 <td>init</td>
@@ -1597,8 +1598,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.090)</td>
 <td>(0.110)</td>
 <td>(0.114)</td>
-<td>(0.109)</td>
-<td>(0.138)</td>
+<td>(0.112)</td>
+<td>(0.131)</td>
 </tr>
 <tr>
 <td>milex</td>
@@ -1651,8 +1652,8 @@ modelsummary(list("log(LER)" = M2,
 <td>(1.032)</td>
 <td>(1.077)</td>
 <td>(1.153)</td>
-<td>(1.137)</td>
-<td>(0.962)</td>
+<td>(1.217)</td>
+<td>(0.939)</td>
 </tr>
 <tr>
 <td>Num.Obs.</td>

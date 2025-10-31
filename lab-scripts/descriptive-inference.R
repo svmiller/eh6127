@@ -2,6 +2,7 @@
 #' title: "Some Basics of Descriptive Statistics"
 #' layout: lab
 #' permalink: /lab-scripts/lab-2/
+#' filename: descriptive-inference.R
 #' active: lab-scripts
 #' abstract: "This lab script will introduce students to some basic elements of
 #' descriptive statistics. Nothing here will be too exotic and assumes at least

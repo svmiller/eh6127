@@ -2,6 +2,7 @@
 #' title: "An Intro to R, RStudio, and {tidyverse}"
 #' layout: lab
 #' permalink: /lab-scripts/lab-1/
+#' filename: intro-r-rstudio.R
 #' active: lab-scripts
 #' abstract: "This lab scripts offers what I think to be a gentle introduction
 #' to R and RStudio. It will try to acclimate students with R as programming 

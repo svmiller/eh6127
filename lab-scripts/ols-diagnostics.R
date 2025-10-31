@@ -2,6 +2,7 @@
 #' title: "Linear Model Diagnostics (and What to Do if You Flunk One)"
 #' layout: lab
 #' permalink: /lab-scripts/lab-5/
+#' filename: ols-diagnostics.R
 #' active: lab-scripts
 #' abstract: "The linear model works great until it doesn't. Alternatively: I
 #' accept the model's output only the extent to which I accept its assumptions

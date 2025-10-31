@@ -2,6 +2,7 @@
 title: "Some Basics of Descriptive Statistics"
 layout: lab
 permalink: /lab-scripts/lab-2/
+filename: descriptive-inference.R
 active: lab-scripts
 abstract: "This lab script will introduce students to some basic elements of
 descriptive statistics. Nothing here will be too exotic and assumes at least
@@ -26,11 +27,11 @@ really matter here.
 library(stevedata)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.2     ✔ readr     2.1.4
+#> ✔ dplyr     1.1.4     ✔ readr     2.1.4
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
-#> ✔ purrr     1.0.2     
+#> ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
+#> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
