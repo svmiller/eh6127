@@ -9,7 +9,7 @@ title: "Probability and Sampling"
 subtitle: EH6127 -- Quantitative Methods
 author: Steven V. Miller
 institute: Department of Economic History and International Relations
-titlegraphic: "`r paste0(Sys.getenv('HOME'), '/Dropbox/stockholm/su-logotyp.png')`"
+titlegraphic: "`r paste0(Sys.getenv('HOME'), '/Koofr/su/su-logotyp.png')`"
 titlegraphshift: "\\vspace{6cm}"
 make149: true
 mainfont: "Open Sans Light"
@@ -32,7 +32,7 @@ header-includes:
 
 
 ```{r setup, include=FALSE, cache=F, message=F, warning=F, results="hide"}
-knitr::opts_chunk$set(cache=TRUE, warning=F, message=F, echo=FALSE, fig.width = 14, fig.height = 8.5)
+knitr::opts_chunk$set(cache=F, warning=F, message=F, echo=FALSE, fig.width = 14, fig.height = 8.5)
 knitr::opts_chunk$set(fig.path='figs/')
 knitr::opts_chunk$set(cache.path='cache/')
 
@@ -46,7 +46,7 @@ knitr::opts_chunk$set(
 
 
 ```{r loadstuff, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(cache=F)
 options(knitr.kable.NA = '')
 library(tidyverse)
 library(stevemisc)
@@ -282,21 +282,21 @@ dbinom(5,10,.5)
 
 ### An Application: The Decline of War?
 
-![](decline-of-war.png)
+![](decline-of-war.png){ width=40% }
 
 ### The Decline of War?
 
 Pinker (2011) argues the absence of world wars since WW2 shows a decline of violence. But:
 
 - This kind of war is fantastically rare.
-- Gibler and Miller (Forthcoming) code 1,958 confrontations from 1816 to 2014.
+- Gibler and Miller (2024) code 1,958 confrontations from 1816 to 2014.
 - Of those: 84 are wars (*p* = .042)
 - Of the wars, only 24 are wars we could think of as "really big" (*p* = .012)
 
 ### The Decline of War?
 
 
-The year is 2024. We haven't observed a World War II in, basically, 75 years. What is the probability of us *not* observing this where:
+We haven't observed a World War II in, let's say, 75 years. What is the probability of us *not* observing this where:
 
 - *p* = .042, the overall base rate of war vs. not-war?
 - *p* = .012, the overall base rate of a "really big war"?
