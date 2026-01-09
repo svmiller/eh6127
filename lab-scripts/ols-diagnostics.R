@@ -771,11 +771,7 @@ modelsummary(list("log(LER)" = M2,
 #' number of times. In expectation, the mean coefficients of these re-estimated 
 #' models converge on what it is in the offending model (which you would know 
 #' from central limit theorem). However, the *standard deviation of the 
-#' coefficients is your bootstrapped standard error*. Another popular approach 
-#' is a bootstrapped model from the residuals. Sometimes called a “Bayesian” or 
-#' “fractional” bootstrap, this approach had its hot girl summer on Twitter two 
-#' or three years ago and leaves the regressors at their fixed values, 
-#' resamples the residuals, and adds them to the response variable. 
+#' coefficients is your bootstrapped standard error*. 
 #' 
 #' If you wanted to do any one of these in isolation, you'd want to leverage
 #' the `coeftest()` function in `{lmtest}` with the assorted mechanisms for
@@ -805,14 +801,12 @@ modelsummary(list("log(LER)" = M2,
                   "WLS" = wls(update(M2, na.action=na.exclude)),
                   "HC0" = M2,
                   "HC3" = M2,
-                  "Bootstrap" = M2,
-                  "Resid. Boot." = M2),
+                  "Bootstrap" = M2),
              vcov = list(vcovHC(M2,type='const'),
                          vcovHC(wls(update(M2, na.action=na.exclude))),
                          vcovHC(M2,type='HC0'),
                          vcovHC(M2, type='HC3'),
-                         vcovBS(M2),
-                         vcovBS(M2, type='residual')),
+                         vcovBS(M2)),
              gof_map = c("nobs", "adj.r.squared"),
              title = "Hi Mom! Last time, I promise.",
              stars = TRUE)

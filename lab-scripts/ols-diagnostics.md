@@ -1428,11 +1428,6 @@ number of times. In expectation, the mean coefficients of these
 re-estimated models converge on what it is in the offending model (which
 you would know from central limit theorem). However, the *standard
 deviation of the coefficients is your bootstrapped standard error*.
-Another popular approach is a bootstrapped model from the residuals.
-Sometimes called a “Bayesian” or “fractional” bootstrap, this approach
-had its hot girl summer on Twitter two or three years ago and leaves the
-regressors at their fixed values, resamples the residuals, and adds them
-to the response variable.
 
 If you wanted to do any one of these in isolation, you’d want to
 leverage the `coeftest()` function in `{lmtest}` with the assorted
@@ -1493,14 +1488,12 @@ modelsummary(list("log(LER)" = M2,
                   "WLS" = wls(update(M2, na.action=na.exclude)),
                   "HC0" = M2,
                   "HC3" = M2,
-                  "Bootstrap" = M2,
-                  "Resid. Boot." = M2),
+                  "Bootstrap" = M2),
              vcov = list(vcovHC(M2,type='const'),
                          vcovHC(wls(update(M2, na.action=na.exclude))),
                          vcovHC(M2,type='HC0'),
                          vcovHC(M2, type='HC3'),
-                         vcovBS(M2),
-                         vcovBS(M2, type='residual')),
+                         vcovBS(M2)),
              gof_map = c("nobs", "adj.r.squared"),
              title = "Hi Mom! Last time, I promise.",
              stars = TRUE)
@@ -1509,11 +1502,10 @@ modelsummary(list("log(LER)" = M2,
 <table style="width:95%;">
 <caption>Hi Mom! Last time, I promise.</caption>
 <colgroup>
-<col style="width: 18%" />
-<col style="width: 12%" />
-<col style="width: 12%" />
-<col style="width: 10%" />
-<col style="width: 10%" />
+<col style="width: 22%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 13%" />
 <col style="width: 13%" />
 <col style="width: 16%" />
 </colgroup>
@@ -1525,7 +1517,6 @@ modelsummary(list("log(LER)" = M2,
 <th>HC0</th>
 <th>HC3</th>
 <th>Bootstrap</th>
-<th>Resid. Boot.</th>
 </tr>
 </thead>
 <tbody>
@@ -1536,7 +1527,6 @@ modelsummary(list("log(LER)" = M2,
 <td>0.352+</td>
 <td>0.352</td>
 <td>0.352+</td>
-<td>0.352</td>
 </tr>
 <tr>
 <td></td>
@@ -1545,7 +1535,6 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.207)</td>
 <td>(0.221)</td>
 <td>(0.205)</td>
-<td>(0.299)</td>
 </tr>
 <tr>
 <td>xm_qudsest</td>
@@ -1553,7 +1542,6 @@ modelsummary(list("log(LER)" = M2,
 <td>0.103</td>
 <td>0.245*</td>
 <td>0.245*</td>
-<td>0.245**</td>
 <td>0.245**</td>
 </tr>
 <tr>
@@ -1563,7 +1551,6 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.095)</td>
 <td>(0.099)</td>
 <td>(0.092)</td>
-<td>(0.077)</td>
 </tr>
 <tr>
 <td>wbgdppc2011est</td>
@@ -1572,7 +1559,6 @@ modelsummary(list("log(LER)" = M2,
 <td>0.083**</td>
 <td>0.083**</td>
 <td>0.083**</td>
-<td>0.083*</td>
 </tr>
 <tr>
 <td></td>
@@ -1581,13 +1567,11 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.030)</td>
 <td>(0.032)</td>
 <td>(0.030)</td>
-<td>(0.036)</td>
 </tr>
 <tr>
 <td>init</td>
 <td>0.120</td>
 <td>0.182*</td>
-<td>0.120</td>
 <td>0.120</td>
 <td>0.120</td>
 <td>0.120</td>
@@ -1599,7 +1583,6 @@ modelsummary(list("log(LER)" = M2,
 <td>(0.110)</td>
 <td>(0.114)</td>
 <td>(0.112)</td>
-<td>(0.131)</td>
 </tr>
 <tr>
 <td>milex</td>
@@ -1608,11 +1591,9 @@ modelsummary(list("log(LER)" = M2,
 <td>0.000*</td>
 <td>0.000</td>
 <td>0.000</td>
-<td>0.000***</td>
 </tr>
 <tr>
 <td></td>
-<td>(0.000)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
@@ -1626,11 +1607,9 @@ modelsummary(list("log(LER)" = M2,
 <td>-0.000*</td>
 <td>-0.000*</td>
 <td>-0.000*</td>
-<td>-0.000+</td>
 </tr>
 <tr>
 <td></td>
-<td>(0.000)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
 <td>(0.000)</td>
@@ -1644,7 +1623,6 @@ modelsummary(list("log(LER)" = M2,
 <td>0.722</td>
 <td>0.722</td>
 <td>0.722</td>
-<td>0.722</td>
 </tr>
 <tr>
 <td></td>
@@ -1653,11 +1631,9 @@ modelsummary(list("log(LER)" = M2,
 <td>(1.077)</td>
 <td>(1.153)</td>
 <td>(1.217)</td>
-<td>(0.939)</td>
 </tr>
 <tr>
 <td>Num.Obs.</td>
-<td>252</td>
 <td>252</td>
 <td>252</td>
 <td>252</td>
@@ -1671,11 +1647,10 @@ modelsummary(list("log(LER)" = M2,
 <td>0.220</td>
 <td>0.220</td>
 <td>0.220</td>
-<td>0.220</td>
 </tr>
 </tbody><tfoot>
 <tr>
-<td colspan="7"><ul>
+<td colspan="6"><ul>
 <li>p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</li>
 </ul></td>
 </tr>
