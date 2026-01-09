@@ -41,7 +41,7 @@ knitr::opts_chunk$set(collapse = TRUE,
 #' The latter of the two has an IR application you might find interesting. The 
 #' former is illustrative of what exactly the procedure is doing and how you
 #' could do it yourself. Finally, IRIII.2 students in our department also 
-#' get the same ["check this shit out" approach to `{modelsummary}`](http://ir3-2.svmiller.com/lab-scripts/lab-5/).
+#' get the same ["check this shit out" approach to `{modelsummary}`](https://ir3-2.svmiller.com/lab-scripts/modelsummary/).
 #' You all will be saying hi to my mom in Ohio a lot.
 #' 
 #' Finally, I want to make sure you all understand what happens in the linear

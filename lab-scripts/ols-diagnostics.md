@@ -35,8 +35,8 @@ The latter of the two has an IR application you might find interesting.
 The former is illustrative of what exactly the procedure is doing and
 how you could do it yourself. Finally, IRIII.2 students in our
 department also get the same [“check this shit out” approach to
-`{modelsummary}`](http://ir3-2.svmiller.com/lab-scripts/lab-5/). You all
-will be saying hi to my mom in Ohio a lot.
+`{modelsummary}`](https://ir3-2.svmiller.com/lab-scripts/modelsummary/).
+You all will be saying hi to my mom in Ohio a lot.
 
 Finally, I want to make sure you all understand what happens in the
 linear model when there are log-transformed variables on one or both
@@ -65,9 +65,9 @@ function that does what `linloess_plot()` does (but better).
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 #> ✔ dplyr     1.1.4     ✔ readr     2.1.4
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
-#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
+#> ✔ forcats   1.0.1     ✔ stringr   1.5.0
+#> ✔ ggplot2   4.0.0     ✔ tibble    3.2.1
+#> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
 #> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
