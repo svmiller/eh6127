@@ -26,9 +26,9 @@ have the data sets we’ll be using today.
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 #> ✔ dplyr     1.1.4     ✔ readr     2.1.4
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.0
-#> ✔ ggplot2   4.0.0     ✔ tibble    3.3.0
-#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.0
+#> ✔ forcats   1.0.1     ✔ stringr   1.5.0
+#> ✔ ggplot2   4.0.0     ✔ tibble    3.2.1
+#> ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
 #> ✔ purrr     1.1.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
@@ -468,7 +468,7 @@ to accomplish.
 Now, let’s a do a multiple regression. Let’s see if we can’t regress the
 immigration sentiment variable on the Scotland dummy variable, whether
 the respondent is a woman, and the respondent’s ideology on a 0-10 scale
-where 0 is the most to the right, and 10 is the most to the left. You
+where 0 is the most to the left, and 10 is the most to the right. You
 knew how to do this in the bivariate case, but what do you do to the
 formula when you have multiple independent variables? Simple as this:
 

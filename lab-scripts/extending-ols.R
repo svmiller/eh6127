@@ -234,7 +234,7 @@ summary(M4)
 #' Now, let's a do a multiple regression. Let's see if we can't regress the
 #' immigration sentiment variable on the Scotland dummy variable, whether the
 #' respondent is a woman, and the respondent's ideology on a 0-10 scale where 0
-#' is the most to the right, and 10 is the most to the left. You knew how to do 
+#' is the most to the left, and 10 is the most to the right. You knew how to do 
 #' this in the bivariate case, but what do you do to the formula when you have 
 #' multiple independent variables? Simple as this:
 #' 
